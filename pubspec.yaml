@@ -8,12 +8,21 @@ version: 0.1.0+1
 environment:
   sdk: ">=3.4.0 <4.0.0"
 
-# Stage 1 intentionally has no third-party runtime dependencies.
-# Packages are added one per commit from Stage 2 onward, each confirmed green in
-# CI before the next. See docs/decisions-and-risks.md, decision D-002.
+# Dependencies are added one per commit and confirmed green in CI before the
+# next, because this project is authored in an environment that cannot resolve
+# or compile them. See docs/decisions-and-risks.md, decision D-002.
 dependencies:
   flutter:
     sdk: flutter
+
+  # Annotations only (@immutable). Maintained by the Dart team.
+  meta: ^1.15.0
+
+  # libsodium bindings: Argon2id and XChaCha20-Poly1305.
+  # Argon2id lives in libsodium's "sumo" interface, reached through
+  # package:sodium/sodium_sumo.dart. Version verified by CI run 42620302996 on
+  # both Android and Windows. See decision D-003.
+  sodium: ^4.1.2+1
 
 dev_dependencies:
   flutter_test:

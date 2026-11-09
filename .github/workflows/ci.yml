@@ -41,6 +41,14 @@ jobs:
           flutter --version
           dart --version
 
+      # Safety net: if the bundled libsodium is not available to the Dart VM
+      # during `flutter test`, a system copy lets the security tests run
+      # against the real primitives rather than not run at all.
+      - name: Install libsodium for host tests
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libsodium-dev
+
       - name: Resolve dependencies
         run: flutter pub get
 

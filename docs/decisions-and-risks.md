@@ -42,26 +42,47 @@ APK, which the build route document makes an early priority.
 
 ---
 
-### D-003 · Cipher choice deferred to Stage 2, bounded to two options
+### D-003 · XChaCha20-Poly1305 and Argon2id, both from libsodium
 
-**Decision.** The cipher will be AES-256-GCM or XChaCha20-Poly1305. Which one is settled
-in Stage 2, after a vetted library for each has been confirmed to build and pass tests on
-both Android and Windows in CI.
+**Decided 9 November 2026**, on evidence from three CI probe runs rather than
+on preference.
 
-**Why.** The source documents permit either. The deciding factor is which has a mature,
-actively maintained Dart or FFI binding that works on both targets, and that is an
-empirical question this environment cannot answer. Choosing blind risks committing the
-file format to a cipher whose library turns out to be unmaintained or desktop-broken.
+**Decision.** The cipher is XChaCha20-Poly1305 (IETF construction) and the key
+derivation is Argon2id, both from libsodium through `package:sodium` 4.1.2+1.
 
-**Not a deferral of design.** The vault format reserves a cipher identifier field, so the
-format is already able to carry either, and to carry a future third.
+**How the alternative was ruled out.** `package:cryptography` was the only
+serious pure-Dart candidate. Its own listing records that the repository moved
+"due to lack of maintenance", and it carries discontinued dependencies. D-003
+named active maintenance as the deciding factor, so it was out on that ground
+alone. The deeper problem was Argon2id: it is memory-hard by design, so a
+pure-Dart implementation would make unlocking slow on a phone, and lowering the
+cost to compensate is exactly the wrong trade for a password manager.
 
-**Current leaning.** XChaCha20-Poly1305, because its 192-bit nonce makes random nonce
-generation safe without a counter, which removes a whole class of nonce-reuse bug. AES-256-GCM
-remains acceptable and may win on hardware-acceleration grounds. The decision will be
-recorded here with the test evidence behind it.
+**Why XChaCha20-Poly1305 over AES-256-GCM.** Its nonce is 192 bits. At that
+size a nonce can be drawn at random for every single write with no realistic
+chance of a repeat, which removes nonce management — and with it the
+counter-handling mistake that breaks AES-GCM catastrophically. AES-GCM's
+96-bit nonce is too short for that to be safe, so it would need a counter
+persisted across writes and devices, which is precisely the kind of state that
+goes wrong during a cloud sync conflict. Hardware-accelerated AES would have
+been faster, but the payload here is a vault file of kilobytes, so throughput
+is irrelevant and safety is not.
 
----
+**What the probes established.**
+
+| Probe | Run | Finding |
+|---|---|---|
+| 1 | 42618366937 | `sodium` resolves; an Android APK and a Windows application both still build with libsodium added; libsodium 1.0.18 installs on the Linux runner |
+| 1 | 42618366937 | No `pwhash.dart` in the base API — Argon2id is in the "sumo" interface, not the default one |
+| 2 | 42619562544 | `SodiumSumoInit.init()` is synchronous and uses a bundled libsodium, so no dynamic-library loader is needed; `Aead.encrypt`/`decrypt` accept `additionalData`, which is what lets the header be authenticated; `sodium_libs` is **deprecated**, with everything moved into `sodium` |
+| 3 | 42620302996 | `CryptoPwhashAlgorithm.argon2id13` is the explicit Argon2id value; `sodium` alone builds on both platforms without the deprecated wrapper |
+
+**Consequences recorded elsewhere.** Argon2id is named explicitly at the call
+site rather than left to the library default, because the same call also offers
+Argon2i and a password manager should not infer which function protects the
+vault. `sodium_libs` is not used. The header reserves an algorithm identifier
+for both the KDF and the cipher, so a future third option needs no format
+break.
 
 ### D-004 · Platform projects are generated, then committed
 
@@ -167,9 +188,9 @@ priority.
 
 | ID | Risk | Likelihood | Impact | Mitigation | Owner |
 |---|---|---|---|---|---|
-| R-001 | Pushes to the repository are refused, so no build can run | **High** (reported by the session) | **High** — blocks everything | Owner authorises the Claude GitHub App for the repository; verified by an actual push attempt | **Owner** |
+| ~~R-001~~ | ~~Pushes to the repository are refused~~ **CLOSED 9 Nov 2026**: the first push succeeded | — | — | — | — |
 | R-002 | First CI build fails on an unforeseen toolchain detail | High | Medium | Zero dependencies in Stage 1; fail-fast pipeline ordering; logs read and fixed per MP 17 | Agent |
-| R-003 | No Dart Argon2id library builds cleanly on both Android and Windows | Medium | High | Evaluate candidates in CI in Stage 2 before committing the format; fall back to platform-channel implementations per platform if needed | Agent |
+| ~~R-003~~ | ~~No Dart Argon2id library builds cleanly on both Android and Windows~~ **CLOSED 9 Nov 2026**: libsodium builds on both; verified by CI runs 42618366937 and 42620302996 | — | — | Resolved by decision D-003 | — |
 | R-004 | Owner loses a master password and the vault becomes unrecoverable | Medium | **High** — permanent data loss | Explicit warnings at creation; Phase 2 recovery sheet; no false promise of recovery | Shared |
 | R-005 | Android autofill proves unreliable across OEM skins | Medium | Medium | Built last in Phase 1, after the vault is stable; documented honestly if partial | Agent |
 | R-006 | A real credential is committed to the public repository | Low | **High** — irreversible exposure | `.gitignore` blocks vault and key extensions; synthetic data only; no secret ever requested in chat | Agent |
