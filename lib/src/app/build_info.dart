@@ -2,6 +2,7 @@
 ///
 /// Nothing here is secret and nothing here is read from a vault. These values
 /// exist so the interface can state plainly what the user is looking at.
+library;
 
 /// Product name, shown in the title bar and about screen.
 const String appName = 'Family Vault';

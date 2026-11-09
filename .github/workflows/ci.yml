@@ -27,11 +27,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Channel is deliberately unpinned for now. Once the first green run
-      # reports a version, it is pinned here for reproducibility.
+      # Pinned for reproducibility. 3.47.9 is the version the first run
+      # resolved from the stable channel and the one this project is verified
+      # against. Raise it deliberately, not implicitly.
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: 3.47.9
           cache: true
 
       - name: Report toolchain versions
@@ -42,11 +44,8 @@ jobs:
       - name: Resolve dependencies
         run: flutter pub get
 
-      # Non-blocking for now: the files were hand-written in an environment
-      # that cannot run the formatter. This becomes a blocking check once the
-      # first run has reported the formatter's preferred output.
+      # Blocking: confirmed clean on the first run (CI 42609591764).
       - name: Check formatting
-        continue-on-error: true
         run: dart format --output=none --set-exit-if-changed .
 
       - name: Analyse
@@ -79,6 +78,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: 3.47.9
           cache: true
 
       - name: Generate platform projects if absent
@@ -115,6 +115,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: 3.47.9
           cache: true
 
       - name: Generate platform projects if absent

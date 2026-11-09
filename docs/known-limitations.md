@@ -98,18 +98,12 @@ environment cannot run `flutter create`. Once generated, they are committed, and
 the script becomes a no-op. A reviewer cloning the repository before that commit
 must run the script once. See decision D-004.
 
-### The Flutter version is not yet pinned
+### The Flutter version is pinned to one release
 
-CI uses the current stable channel. A pinned version is better for
-reproducibility, but pinning a version that could not be verified to exist was
-the greater risk. It is pinned once the first green run reports a working
-version.
-
-### Formatting is not yet a blocking check
-
-`dart format` runs in CI but does not fail the build, because the source was
-hand-written in an environment with no formatter. It becomes blocking once the
-first run has normalised the files.
+CI builds against Flutter **3.47.9** only. This is deliberate: a pinned
+toolchain makes builds reproducible, and the version is raised explicitly rather
+than drifting with the stable channel. The cost is that a newer Flutter is not
+picked up automatically.
 
 ---
 

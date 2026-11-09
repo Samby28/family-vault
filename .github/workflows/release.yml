@@ -31,6 +31,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: 3.47.9
           cache: true
       - run: bash tool/bootstrap_platforms.sh
       - run: flutter pub get
@@ -55,6 +56,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: 3.47.9
           cache: true
       - shell: bash
         run: bash tool/bootstrap_platforms.sh
