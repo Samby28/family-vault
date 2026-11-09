@@ -119,9 +119,24 @@ jobs:
           cat > notes.md <<'NOTES'
           ## Family Vault
 
-          Secure, offline-first password manager for Android and Windows.
-          Your vault is encrypted on your own device. Nothing is sent to any
-          server, and no server can read it.
+          A secure, offline-first password manager for Android and Windows.
+          Your vault is encrypted on your own device with a key made from your
+          master password. Nothing is sent anywhere, and no server of ours can
+          read it.
+
+          ### What works in this version
+
+          Create a vault, save logins, secure notes, payment cards and
+          identities, organise them in folders, search, generate strong
+          passwords and passphrases, get live six-digit authenticator codes for
+          your other accounts, see which of your passwords need attention, and
+          lock the vault by hand, on a timer, or when the app leaves the screen.
+
+          ### Not in this version
+
+          No syncing between devices yet, no autofill on Android, no importing
+          from another password manager, and no printable recovery sheet. See
+          `docs/known-limitations.md`.
 
           ### Downloads
 
@@ -129,6 +144,9 @@ jobs:
           |---|---|
           | `FamilyVault-Android.apk` | Android phones and tablets |
           | `FamilyVault-Windows.zip` | Windows 10 and 11 |
+
+          Step-by-step installation: `docs/installing.md`.
+          How to use it: `docs/user-guide.md`.
 
           ### Installing on Android
 
@@ -141,15 +159,17 @@ jobs:
           Unzip the folder anywhere and run `family_vault.exe`. Keep the whole
           folder together; the program needs the files beside it.
 
-          ### Please read
+          ### Please read this part
 
-          Your master password cannot be recovered. If you forget it, the vault
-          cannot be opened by anyone, including us. Write it down and keep it
-          somewhere safe.
+          **Your master password cannot be recovered.** If you forget it, the
+          vault cannot be opened by anyone, including us. There is no reset.
+          Write it down and keep it somewhere safe.
 
-          See `docs/known-limitations.md` in the repository for what is and is
-          not implemented in this version. This project has not had an
-          independent security audit.
+          Until syncing arrives, each device has its own separate vault, and
+          your vault exists only on that device. If you lose the device, you
+          lose the vault.
+
+          This project has not had an independent security audit.
           NOTES
 
       - name: Create or update the release

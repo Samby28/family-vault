@@ -7,13 +7,18 @@ Your passwords are encrypted on your own device with a key derived from your
 master password. There is no server, no account to create, and nothing that any
 third party — including the people who built this — can decrypt.
 
-> **Project status: Stage 1 of 6 complete.** The scaffold and the automated build
-> pipeline are green: 11 of 11 tests pass, and an Android APK and a Windows
-> application are produced on every push. The encrypted vault itself is the next
-> stage and is **not yet implemented**, so **do not store real passwords in this
-> version** — there is nowhere for them to go.
-> See [`docs/progress-log.md`](docs/progress-log.md) for exactly what works and
-> [`docs/known-limitations.md`](docs/known-limitations.md) for what does not.
+> **Project status: Phase 1 working — v0.3.0.** The encrypted vault is built and
+> usable on Android and Windows. **264 tests pass**, including security tests
+> against real libsodium. You can create a vault, save logins, notes, cards and
+> identities, organise them in folders, search, generate passwords, hold
+> two-factor codes, and check password health.
+>
+> **Not yet built:** syncing between devices, Android autofill, importing from
+> another password manager, a recovery sheet, fingerprint unlock. Each device
+> has its own separate vault, so **if you lose the device you lose the vault**.
+> See [`docs/known-limitations.md`](docs/known-limitations.md).
+>
+> New here? [Installing](docs/installing.md) · [How to use it](docs/user-guide.md)
 
 ---
 
@@ -45,6 +50,8 @@ override. No subscription. Each family member keeps their own vault file.
 
 | Document | What it covers |
 |---|---|
+| [Installing](docs/installing.md) | Step-by-step for Android and Windows, written for non-programmers |
+| [User guide](docs/user-guide.md) | How to use it, and its honest limits |
 | [Requirements checklist](docs/requirements-checklist.md) | Every requirement, its source and its real status |
 | [Architecture](docs/architecture.md) | Layers, unlock sequence, vault format, diagrams |
 | [Decisions and risks](docs/decisions-and-risks.md) | Every significant decision, with reasoning, and the risk register |

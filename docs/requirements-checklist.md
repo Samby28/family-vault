@@ -29,7 +29,7 @@ These override convenience at every decision point.
 | A1 | All encryption and decryption happens locally on the device | MP 5.1, FI 1 | COMPLETED (no network path exists; libsodium runs in-process) |
 | A2 | No central server; no server able to decrypt a vault | MP 5.1, MP 11 | COMPLETED (none exists) |
 | A3 | Cloud drive receives encrypted vault files only | MP 5.1, FI 1 | NOT STARTED |
-| A4 | Titles, URLs, usernames, notes and folder names are all inside the encrypted payload | MP 5.1, FI 1 | NOT STARTED |
+| A4 | Titles, URLs, usernames, notes and folder names are all inside the encrypted payload | MP 5.1, FI 1 | COMPLETED (titles, URLs, usernames, notes and folder names are all inside the encrypted payload; asserted by test) |
 | A5 | No vault contents, master password, keys or TOTP secrets sent to analytics, logs or any external service | MP 5.1 | COMPLETED for Stage 1 (no network code exists; `avoid_print` enforced) |
 | A6 | Cryptographic primitives are never hand-implemented; vetted libraries only | MP 4, FI 1 | COMPLETED (libsodium via `package:sodium`; no primitive written here) |
 | A7 | Public repository contains no real credentials, vault files, keys or family data | BR, MP 13 | COMPLETED for Stage 1 (`.gitignore` guard; verified no secret material present) |
@@ -63,62 +63,62 @@ These override convenience at every decision point.
 
 | ID | Requirement | Source | Status |
 |---|---|---|---|
-| B2.1 | Create a new vault with master-password confirmation and strength guidance | MP 5.2, MP 7.1 | NOT STARTED |
-| B2.2 | Open an existing vault | MP 7.1 | NOT STARTED |
-| B2.3 | Lock and unlock | MP 7.1 | NOT STARTED |
-| B2.4 | Change vault settings | MP 7.1 | NOT STARTED |
-| B2.5 | Encrypted vault export | MP 7.1, MP 7.9 | NOT STARTED |
-| B2.6 | Vault import | MP 7.1 | NOT STARTED |
-| B2.7 | Delete a vault behind an explicit confirmation | MP 7.1 | NOT STARTED |
-| B2.8 | Full offline operation on the local encrypted file | MP 3, MP 7.1 | NOT STARTED |
-| B2.9 | Clear warnings that a lost master password means a lost vault | MP 5.2 | NOT STARTED |
+| B2.1 | Create a new vault with master-password confirmation and strength guidance | MP 5.2, MP 7.1 | COMPLETED (confirmation, strength meter and an acknowledged warning) |
+| B2.2 | Open an existing vault | MP 7.1 | COMPLETED |
+| B2.3 | Lock and unlock | MP 7.1 | COMPLETED |
+| B2.4 | Change vault settings | MP 7.1 | COMPLETED |
+| B2.5 | Encrypted vault export | MP 7.1, MP 7.9 | IN PROGRESS (implemented in the session; no screen for it yet) |
+| B2.6 | Vault import | MP 7.1 | NOT STARTED (import screen is Phase 2) |
+| B2.7 | Delete a vault behind an explicit confirmation | MP 7.1 | COMPLETED (two confirmations and the word DELETE typed out) |
+| B2.8 | Full offline operation on the local encrypted file | MP 3, MP 7.1 | COMPLETED |
+| B2.9 | Clear warnings that a lost master password means a lost vault | MP 5.2 | COMPLETED |
 
 ### B3. Item types
 
 | ID | Requirement | Source | Status |
 |---|---|---|---|
-| B3.1 | Login: name, URL, username, email, password, notes, TOTP secret, created, modified | MP 7.2A | NOT STARTED |
-| B3.2 | Secure Note: title, folder, text content, created, modified | MP 7.2B, FI 2 | NOT STARTED |
-| B3.3 | Payment Card: cardholder, number, expiry, CVV, nickname, notes — all encrypted, never needlessly displayed | MP 7.2C | NOT STARTED |
-| B3.4 | Identity: full name, address, email, phone, date of birth, other fields, notes | MP 7.2D | NOT STARTED |
-| B3.5 | Data model extensible to future item types | MP 7.2 | NOT STARTED |
+| B3.1 | Login: name, URL, username, email, password, notes, TOTP secret, created, modified | MP 7.2A | COMPLETED |
+| B3.2 | Secure Note: title, folder, text content, created, modified | MP 7.2B, FI 2 | COMPLETED |
+| B3.3 | Payment Card: cardholder, number, expiry, CVV, nickname, notes — all encrypted, never needlessly displayed | MP 7.2C | COMPLETED |
+| B3.4 | Identity: full name, address, email, phone, date of birth, other fields, notes | MP 7.2D | COMPLETED |
+| B3.5 | Data model extensible to future item types | MP 7.2 | COMPLETED (each type carries its own field list; one form renders all four) |
 
 ### B4. Organisation and retrieval
 
 | ID | Requirement | Source | Status |
 |---|---|---|---|
-| B4.1 | Create, rename, delete and organise folders | MP 7.3, FI 2 | NOT STARTED |
-| B4.2 | Folder names and relationships encrypted | MP 7.3 | NOT STARTED |
-| B4.3 | Search by item name, username, website and folder | MP 7.4 | NOT STARTED |
-| B4.4 | Favourites | MP 7.4, FI 2 | NOT STARTED |
-| B4.5 | Sorting and filtering | MP 7.4 | NOT STARTED |
-| B4.6 | Search runs on in-memory decrypted data; terms never leave the device | MP 7.4 | NOT STARTED |
-| B4.7 | Trash: view, restore, permanently delete with confirmation; deleted data stays encrypted | MP 7.8, FI 2 | NOT STARTED |
+| B4.1 | Create, rename, delete and organise folders | MP 7.3, FI 2 | COMPLETED |
+| B4.2 | Folder names and relationships encrypted | MP 7.3 | COMPLETED |
+| B4.3 | Search by item name, username, website and folder | MP 7.4 | COMPLETED |
+| B4.4 | Favourites | MP 7.4, FI 2 | COMPLETED |
+| B4.5 | Sorting and filtering | MP 7.4 | IN PROGRESS (sorted by name; no user-chosen sort yet) |
+| B4.6 | Search runs on in-memory decrypted data; terms never leave the device | MP 7.4 | COMPLETED (runs in memory; passwords deliberately not searched) |
+| B4.7 | Trash: view, restore, permanently delete with confirmation; deleted data stays encrypted | MP 7.8, FI 2 | COMPLETED |
 
 ### B5. Generator and health
 
 | ID | Requirement | Source | Status |
 |---|---|---|---|
-| B5.1 | Password generator: length, upper, lower, digits, symbols, ambiguous-character exclusion | MP 7.5, FI 2 | NOT STARTED |
-| B5.2 | Passphrase generation with configurable word count | MP 7.5 | NOT STARTED |
-| B5.3 | Username generation | MP 7.5 | NOT STARTED |
-| B5.4 | Password-strength evaluation | MP 7.5 | NOT STARTED |
-| B5.5 | Cryptographically secure RNG for all generation | MP 7.5 | NOT STARTED |
-| B5.6 | Generated password copyable and savable straight into an entry | MP 7.5 | NOT STARTED |
-| B5.7 | Password-health report: weak, reused, old, needs-updating, with risk summary and recommendations | MP 7.6, FI 5 | NOT STARTED |
-| B5.8 | Health report runs entirely on-device; no password sent to any service | MP 7.6 | NOT STARTED |
+| B5.1 | Password generator: length, upper, lower, digits, symbols, ambiguous-character exclusion | MP 7.5, FI 2 | COMPLETED |
+| B5.2 | Passphrase generation with configurable word count | MP 7.5 | COMPLETED |
+| B5.3 | Username generation | MP 7.5 | COMPLETED |
+| B5.4 | Password-strength evaluation | MP 7.5 | COMPLETED (master-password meter and the health report) |
+| B5.5 | Cryptographically secure RNG for all generation | MP 7.5 | COMPLETED (Random.secure throughout) |
+| B5.6 | Generated password copyable and savable straight into an entry | MP 7.5 | COMPLETED |
+| B5.7 | Password-health report: weak, reused, old, needs-updating, with risk summary and recommendations | MP 7.6, FI 5 | COMPLETED |
+| B5.8 | Health report runs entirely on-device; no password sent to any service | MP 7.6 | COMPLETED |
 
 ### B6. Built-in TOTP authenticator (for the user's other accounts)
 
 | ID | Requirement | Source | Status |
 |---|---|---|---|
-| B6.1 | RFC 6238-compliant TOTP generation | MP 7.7, FI 4 | NOT STARTED |
-| B6.2 | Attach an authenticator secret to a login item | MP 7.7 | NOT STARTED |
-| B6.3 | Six-digit codes by default, with countdown to renewal | MP 7.7 | NOT STARTED |
-| B6.4 | Copy code | MP 7.7 | NOT STARTED |
-| B6.5 | Validate supported TOTP parameters; handle clock-skew problems | MP 7.7 | NOT STARTED |
-| B6.6 | TOTP secrets stay encrypted inside the vault | MP 7.7 | NOT STARTED |
-| B6.7 | Accept standard `otpauth://` provisioning URIs | MP 7.7 | NOT STARTED |
+| B6.1 | RFC 6238-compliant TOTP generation | MP 7.7, FI 4 | COMPLETED (RFC 6238 vectors asserted for SHA-1, SHA-256 and SHA-512) |
+| B6.2 | Attach an authenticator secret to a login item | MP 7.7 | COMPLETED |
+| B6.3 | Six-digit codes by default, with countdown to renewal | MP 7.7 | COMPLETED |
+| B6.4 | Copy code | MP 7.7 | COMPLETED |
+| B6.5 | Validate supported TOTP parameters; handle clock-skew problems | MP 7.7 | IN PROGRESS (parameters validated; no clock-skew warning yet) |
+| B6.6 | TOTP secrets stay encrypted inside the vault | MP 7.7 | COMPLETED |
+| B6.7 | Accept standard `otpauth://` provisioning URIs | MP 7.7 | COMPLETED (otpauth links accepted and normalised) |
 
 ### B7. Import and export
 
@@ -128,30 +128,30 @@ These override convenience at every decision point.
 | B7.2 | CSV import from Google Chrome | MP 7.9, FI 2 | NOT STARTED |
 | B7.3 | CSV import from KeePass | MP 7.9, FI 2 | NOT STARTED |
 | B7.4 | Column mapping and validation to reduce import errors | MP 7.9 | NOT STARTED |
-| B7.5 | Encrypted export | MP 7.9, FI 2 | NOT STARTED |
+| B7.5 | Encrypted export | MP 7.9, FI 2 | IN PROGRESS (implemented in the session; no screen yet) |
 | B7.6 | Explicit confirmation and warning that CSV export is unencrypted; temporary files handled securely | MP 7.9 | NOT STARTED |
 
 ### B8. Security controls
 
 | ID | Requirement | Source | Status |
 |---|---|---|---|
-| B8.1 | Auto-lock after configurable inactivity | MP 5.6, FI 1 | NOT STARTED |
-| B8.2 | Immediate manual lock | MP 5.6 | NOT STARTED |
-| B8.3 | Clipboard auto-clear after a configurable period | MP 5.6, FI 1 | NOT STARTED |
+| B8.1 | Auto-lock after configurable inactivity | MP 5.6, FI 1 | COMPLETED |
+| B8.2 | Immediate manual lock | MP 5.6 | COMPLETED |
+| B8.3 | Clipboard auto-clear after a configurable period | MP 5.6, FI 1 | COMPLETED (only clears if the clipboard still holds that value) |
 | B8.4 | Screenshot protection on Android where supported | MP 5.6, FI 1 | NOT STARTED |
-| B8.5 | Sensitive data handled carefully in memory and cleared when locking | MP 5.6 | NOT STARTED |
+| B8.5 | Sensitive data handled carefully in memory and cleared when locking | MP 5.6 | COMPLETED (key wiped on lock; contents dropped) |
 | B8.6 | Biometric unlock as optional convenience only | MP 5.6, MP 6, FI 1 | NOT STARTED |
 | B8.7 | Hardware-backed device key storage where supported (Android Keystore, Windows) | MP 5.6, FI 1 | NOT STARTED |
-| B8.8 | Master password required again after application restart | MP 5.6, FI 1 | NOT STARTED |
-| B8.9 | Injection, path-traversal and file-manipulation defences | MP 5.6 | NOT STARTED |
-| B8.10 | Error handling that never discloses secrets | MP 5.6 | IN PROGRESS (failure types carry no secret; asserted by test) |
+| B8.8 | Master password required again after application restart | MP 5.6, FI 1 | COMPLETED |
+| B8.9 | Injection, path-traversal and file-manipulation defences | MP 5.6 | IN PROGRESS (no path built from user input; file name is fixed) |
+| B8.10 | Error handling that never discloses secrets | MP 5.6 | COMPLETED (asserted by test) |
 
 ### B9. Android application
 
 | ID | Requirement | Source | Status |
 |---|---|---|---|
 | B9.1 | Installable Android APK | BR, MP 8.1, FI 3 | COMPLETED (built in CI; installed and running on the owner's phone, 9 Nov 2026) |
-| B9.2 | Responsive smartphone interface | MP 8.1 | NOT STARTED |
+| B9.2 | Responsive smartphone interface | MP 8.1 | COMPLETED (drawer layout below 900 logical pixels) |
 | B9.3 | Android Keystore integration | MP 4, MP 8.1 | NOT STARTED |
 | B9.4 | Android Autofill Framework integration, selectable as system provider | MP 4, MP 8.1, FI 3 | NOT STARTED |
 | B9.5 | Credential matching and secure handling of autofill requests | MP 8.1 | NOT STARTED |
@@ -163,23 +163,23 @@ These override convenience at every decision point.
 | ID | Requirement | Source | Status |
 |---|---|---|---|
 | B10.1 | Native Flutter Windows build | BR, MP 8.2, FI 3 | COMPLETED (built in CI; running on the owner's laptop, 9 Nov 2026) |
-| B10.2 | Feature parity with Android for vault, items, generator, TOTP, health, search, import/export | MP 8.2 | NOT STARTED |
+| B10.2 | Feature parity with Android for vault, items, generator, TOTP, health, search, import/export | MP 8.2 | COMPLETED (one codebase; no platform-specific screens) |
 | B10.3 | Secure local storage on Windows | MP 8.2 | NOT STARTED |
 | B10.4 | Optional Windows Hello where supported | MP 4, MP 8.2 | NOT STARTED |
-| B10.5 | Distributable package or installer | MP 8.2 | NOT STARTED |
+| B10.5 | Distributable package or installer | MP 8.2 | IN PROGRESS (zip; no installer) |
 | B10.6 | Architecture left extensible to macOS and Linux without delaying Windows | MP 8.2 | COMPLETED for Stage 1 (no Windows-only code in shared layers) |
 
 ### B11. Interface
 
 | ID | Requirement | Source | Status |
 |---|---|---|---|
-| B11.1 | Twelve-destination navigation: Dashboard, All Items, Logins, Secure Notes, Cards, Identities, Folders, Favourites, Authenticator, Password Health, Trash, Settings | MP 12 | NOT STARTED |
-| B11.2 | Dashboard counters: items, folders, weak, reused, needs attention, favourites | MP 12 | NOT STARTED |
-| B11.3 | Light and dark themes | MP 12 | IN PROGRESS (both themes wired and following the platform setting) |
-| B11.4 | Responsive layouts consistent across Android and Windows | MP 12 | IN PROGRESS (shell switches layout at 900 px) |
-| B11.5 | Confirmation dialogs on every destructive action | MP 12 | NOT STARTED |
-| B11.6 | Plain-language security messages, not unexplained jargon | MP 12 | NOT STARTED |
-| B11.7 | No sensitive data shown on the dashboard unnecessarily | MP 12 | NOT STARTED |
+| B11.1 | Twelve-destination navigation: Dashboard, All Items, Logins, Secure Notes, Cards, Identities, Folders, Favourites, Authenticator, Password Health, Trash, Settings | MP 12 | COMPLETED |
+| B11.2 | Dashboard counters: items, folders, weak, reused, needs attention, favourites | MP 12 | COMPLETED |
+| B11.3 | Light and dark themes | MP 12 | COMPLETED |
+| B11.4 | Responsive layouts consistent across Android and Windows | MP 12 | COMPLETED |
+| B11.5 | Confirmation dialogs on every destructive action | MP 12 | COMPLETED |
+| B11.6 | Plain-language security messages, not unexplained jargon | MP 12 | COMPLETED |
+| B11.7 | No sensitive data shown on the dashboard unnecessarily | MP 12 | COMPLETED (counts only, never entry names) |
 
 ### B12. Build, test and release pipeline
 
@@ -255,10 +255,10 @@ infrastructure.
 | F7 | Security architecture and threat model | NOT STARTED (Stage 2) |
 | F8 | Cryptographic design specification | NOT STARTED (Stage 2) |
 | F9 | Vault file-format specification | NOT STARTED (Stage 2) |
-| F10 | Data-model documentation | NOT STARTED (Stage 3) |
-| F11 | Android installation guide | NOT STARTED (after first APK) |
-| F12 | Windows installation guide | NOT STARTED (after first Windows build) |
-| F13 | User manual for non-technical family members | NOT STARTED (Stage 3) |
+| F10 | Data-model documentation | IN PROGRESS (the model is documented in the source; no standalone document yet) |
+| F11 | Android installation guide | COMPLETED (`docs/installing.md`) |
+| F12 | Windows installation guide | COMPLETED (`docs/installing.md`) |
+| F13 | User manual for non-technical family members | COMPLETED (`docs/user-guide.md`) |
 | F14 | Testing and QA report | NOT STARTED (Stage 2) |
 | F15 | Known limitations | COMPLETED (initial version) |
 | F16 | Capstone technical report | NOT STARTED (final stage) |

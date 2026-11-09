@@ -10,30 +10,40 @@ and tests that pass.
 
 ## 1. Not yet implemented
 
-As of Stage 1, the project contains a working application shell and a working
-build pipeline. **The encrypted vault does not exist yet.**
+As of v0.3.0 the encrypted vault works and can be used for real passwords. What
+is still missing:
 
 | Area | State |
 |---|---|
-| Encrypted vault, Argon2id, authenticated encryption | Not implemented — Stage 2 |
-| Logins, notes, cards, identities | Not implemented — Stage 3 |
-| Folders, search, favourites, trash | Not implemented — Stage 3 |
-| Password generator | Not implemented — Stage 3 |
-| TOTP authenticator | Not implemented — Stage 4 |
-| Password-health report | Not implemented — Stage 4 |
-| Android autofill | Not implemented — Stage 5 |
-| Biometric unlock, auto-lock, clipboard clearing | Not implemented — Stage 3 |
-| CSV import, encrypted export | Not implemented — Stage 3 |
+| Encrypted vault, Argon2id, authenticated encryption | **Working** |
+| Logins, notes, cards, identities | **Working** |
+| Folders, search, favourites, trash | **Working** |
+| Password generator and passphrases | **Working** |
+| TOTP authenticator for other accounts | **Working** |
+| Password-health report | **Working** |
+| Auto-lock, clipboard clearing, lock when hidden | **Working** |
+| Change master password | **Working** |
+| Encrypted export | Implemented in the session, no screen for it yet |
+| Biometric unlock | Not implemented |
+| Screenshot blocking on Android | Not implemented |
+| Android Keystore / Windows Hello device key | Not implemented |
+| Android autofill | Not implemented |
+| CSV import from Chrome, Bitwarden, KeePass | Not implemented |
 | Cloud-drive synchronisation | Not implemented — Phase 2 |
 | Optional key file or hardware key | Not implemented — Phase 2 |
-| Recovery sheet | Not implemented — Phase 2 |
+| Printable recovery sheet | Not implemented — Phase 2 |
+| Item history, custom fields, attachments | Not implemented — Phase 2 |
+| Breach checking | Not implemented — Phase 2 |
 | Passkeys, sharing, emergency access, browser extension | Not implemented — Phase 3 |
 
-**Consequence: do not store real passwords in v0.1.0.** There is nowhere for
-them to go. The interface says so on screen rather than presenting empty screens
-that imply otherwise.
+Two consequences the user needs to know, both stated in the app and in the
+release notes:
 
----
+**There is no syncing, so each device holds a separate vault.** Entries added on
+the phone do not appear on the laptop. There is also no backup, so **losing the
+device loses the vault**.
+
+**There is no fingerprint unlock**, so the master password is typed every time.
 
 ## 2. Limitations that will remain
 

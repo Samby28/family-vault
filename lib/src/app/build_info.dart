@@ -8,11 +8,11 @@ library;
 const String appName = 'Family Vault';
 
 /// Human-readable version. Kept in step with `version:` in pubspec.yaml.
-const String appVersion = '0.1.0';
+const String appVersion = '0.3.0';
 
 /// Development stage currently delivered. Used by the shell so the interface
 /// never implies a feature exists before it does.
-const String appStage = 'Stage 1 - project scaffold and build pipeline';
+const String appStage = 'Phase 1 - working encrypted vault';
 
 /// True only in the public web demonstration build, which is compiled with
 /// `--dart-define=FAMILY_VAULT_DEMO=true`.
