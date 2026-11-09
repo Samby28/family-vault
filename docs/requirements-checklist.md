@@ -26,12 +26,12 @@ These override convenience at every decision point.
 
 | ID | Requirement | Source | Status |
 |---|---|---|---|
-| A1 | All encryption and decryption happens locally on the device | MP 5.1, FI 1 | NOT STARTED |
+| A1 | All encryption and decryption happens locally on the device | MP 5.1, FI 1 | COMPLETED (no network path exists; libsodium runs in-process) |
 | A2 | No central server; no server able to decrypt a vault | MP 5.1, MP 11 | COMPLETED (none exists) |
 | A3 | Cloud drive receives encrypted vault files only | MP 5.1, FI 1 | NOT STARTED |
 | A4 | Titles, URLs, usernames, notes and folder names are all inside the encrypted payload | MP 5.1, FI 1 | NOT STARTED |
 | A5 | No vault contents, master password, keys or TOTP secrets sent to analytics, logs or any external service | MP 5.1 | COMPLETED for Stage 1 (no network code exists; `avoid_print` enforced) |
-| A6 | Cryptographic primitives are never hand-implemented; vetted libraries only | MP 4, FI 1 | NOT STARTED |
+| A6 | Cryptographic primitives are never hand-implemented; vetted libraries only | MP 4, FI 1 | COMPLETED (libsodium via `package:sodium`; no primitive written here) |
 | A7 | Public repository contains no real credentials, vault files, keys or family data | BR, MP 13 | COMPLETED for Stage 1 (`.gitignore` guard; verified no secret material present) |
 | A8 | Two-factor protection for opening a vault is optional and off by default | MP 6, FI 4 | NOT STARTED |
 | A9 | No TOTP code check offered as a substitute for encryption-key protection | MP 6, FI 4 | NOT STARTED |
@@ -46,18 +46,18 @@ These override convenience at every decision point.
 
 | ID | Requirement | Source | Status |
 |---|---|---|---|
-| B1.1 | Argon2id key derivation from master password | MP 5.3, FI 1 | NOT STARTED |
-| B1.2 | Cryptographically secure random salt, unique per vault | MP 5.3 | NOT STARTED |
-| B1.3 | KDF algorithm, parameters and version stored in vault header | MP 5.3, MP 5.5 | NOT STARTED |
-| B1.4 | KDF cost parameters raisable later without breaking existing vaults | MP 5.3 | NOT STARTED |
-| B1.5 | Malformed or hostile KDF parameters rejected before allocation (resource-exhaustion guard) | MP 5.3 | NOT STARTED |
-| B1.6 | Authenticated encryption: AES-256-GCM or XChaCha20-Poly1305 | MP 5.4, FI 1 | NOT STARTED |
-| B1.7 | Unique, cryptographically secure nonce per encryption; nonce reuse prevented | MP 5.4 | NOT STARTED |
-| B1.8 | Tampered, truncated or corrupted vault rejected; authentication failure never silently accepted | MP 5.4 | NOT STARTED |
-| B1.9 | Documented, versioned vault file format with migration path | MP 5.5 | NOT STARTED |
-| B1.10 | Header carries only what decryption and versioning require; no account data in plaintext | MP 5.5 | NOT STARTED |
-| B1.11 | Master password never stored; verification is by successful decryption | MP 5.2 | NOT STARTED |
-| B1.12 | Argon2id parameters benchmarked on target devices | MP 5.3 | NOT STARTED |
+| B1.1 | Argon2id key derivation from master password | MP 5.3, FI 1 | COMPLETED (`argon2id13` named explicitly, not left to a default) |
+| B1.2 | Cryptographically secure random salt, unique per vault | MP 5.3 | COMPLETED (tested: two vaults with the same password get different salts) |
+| B1.3 | KDF algorithm, parameters and version stored in vault header | MP 5.3, MP 5.5 | COMPLETED |
+| B1.4 | KDF cost parameters raisable later without breaking existing vaults | MP 5.3 | COMPLETED (costs live in the header; ceiling 1 GiB) |
+| B1.5 | Malformed or hostile KDF parameters rejected before allocation (resource-exhaustion guard) | MP 5.3 | COMPLETED (bounds-checked in the header parser and again in the service) |
+| B1.6 | Authenticated encryption: AES-256-GCM or XChaCha20-Poly1305 | MP 5.4, FI 1 | COMPLETED (XChaCha20-Poly1305-IETF; decision D-003) |
+| B1.7 | Unique, cryptographically secure nonce per encryption; nonce reuse prevented | MP 5.4 | COMPLETED (fresh 192-bit nonce every write; tested) |
+| B1.8 | Tampered, truncated or corrupted vault rejected; authentication failure never silently accepted | MP 5.4 | COMPLETED (a bit flipped at every byte position is refused; so is truncation, extension and splicing) |
+| B1.9 | Documented, versioned vault file format with migration path | MP 5.5 | IN PROGRESS (format implemented and versioned; the standalone specification F9 is still to write) |
+| B1.10 | Header carries only what decryption and versioning require; no account data in plaintext | MP 5.5 | COMPLETED (asserted by test) |
+| B1.11 | Master password never stored; verification is by successful decryption | MP 5.2 | COMPLETED |
+| B1.12 | Argon2id parameters benchmarked on target devices | MP 5.3 | IN PROGRESS (60 ms on CI hardware at 64 MiB / 2 passes; not yet measured on a phone) |
 
 ### B2. Vault management
 
@@ -144,7 +144,7 @@ These override convenience at every decision point.
 | B8.7 | Hardware-backed device key storage where supported (Android Keystore, Windows) | MP 5.6, FI 1 | NOT STARTED |
 | B8.8 | Master password required again after application restart | MP 5.6, FI 1 | NOT STARTED |
 | B8.9 | Injection, path-traversal and file-manipulation defences | MP 5.6 | NOT STARTED |
-| B8.10 | Error handling that never discloses secrets | MP 5.6 | NOT STARTED |
+| B8.10 | Error handling that never discloses secrets | MP 5.6 | IN PROGRESS (failure types carry no secret; asserted by test) |
 
 ### B9. Android application
 

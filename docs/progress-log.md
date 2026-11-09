@@ -14,11 +14,89 @@ tests covering it pass in CI. A screen that renders is not a completed feature.
 | Stage | Deliverable | Status |
 |---|---|---|
 | 1 | Flutter scaffold and GitHub Actions build pipeline | **COMPLETED** — green on all jobs, run 42612638343 |
-| 2 | Cryptographic core: Argon2id, authenticated encryption, vault format, tests | NOT STARTED |
+| 2 | Cryptographic core: Argon2id, authenticated encryption, vault format, tests | **COMPLETED** — green on all jobs, run 42625696754 |
 | 3 | Vault interface: folders, logins, notes, cards, identities, generator, search, lock screen, trash | NOT STARTED |
 | 4 | TOTP authenticator and password-health reporting | NOT STARTED |
 | 5 | Android autofill integration | NOT STARTED |
 | 6 | Encrypted cloud-drive synchronisation and Phase 2 integrations | NOT STARTED |
+
+---
+
+## 2026-11-09 — Stage 2: cryptographic core
+
+**Status: COMPLETED.** CI run `42625696754` green on all three jobs.
+**91 tests pass**, up from 11. Five runs were needed; every failure is below.
+
+### Evidence
+
+| Check | Result |
+|---|---|
+| `dart format` | PASS, blocking |
+| `flutter analyze` | PASS, no issues |
+| `flutter test` | **91 of 91 passed** |
+| Security tests against real libsodium | **Ran**, not skipped — 22 cases |
+| Argon2id, 64 MiB / 2 passes | seal 60 ms, open 60 ms on CI hardware |
+| Android APK | Builds with libsodium |
+| Windows application | Builds with libsodium |
+
+### Decision D-003, settled on evidence
+
+XChaCha20-Poly1305 and Argon2id, both from libsodium through
+`package:sodium` 4.1.2+1. Three probe runs answered what this environment
+cannot: whether a native dependency still builds on both platforms, and what
+the library's real API is. `package:cryptography` was ruled out because its own
+listing records that its repository moved "due to lack of maintenance", and
+because a pure-Dart Argon2id would make unlocking slow on a phone. Full
+reasoning, including why XChaCha20-Poly1305 rather than AES-256-GCM, is in
+`docs/decisions-and-risks.md`.
+
+### What the security tests actually assert
+
+Not that encryption "works", but the specific properties the product rests on:
+
+- A wrong password cannot open a vault — including one differing by a single
+  character, and an empty one.
+- **A bit flipped at every single byte position in the file is refused.** The
+  test walks the whole file, header included, and asserts every one fails.
+- Truncating at any point, appending a byte, and splicing another vault's
+  sealed section or header are all refused.
+- Two vaults with the same password get different salts.
+- The failure for a wrong password is indistinguishable from the failure for a
+  damaged file, so neither tells an attacker whether a guess was close.
+- No failure message contains the password or the payload.
+
+### Build failures, and how each was fixed
+
+| # | Run | Failed at | Cause | Fix |
+|---|---|---|---|---|
+| 1 | 42622294291 | `dart format` | Two conditions wrapped that fit on one line | Applied the printed diff |
+| 2 | 42623376449 | `dart format` | **The formatter had changed underneath the project.** Raising the SDK floor to 3.13.0 for `sodium` also raised the language version past 3.7, which switches `dart format` from "short" to "tall" style — so a dependency fix silently reformatted the whole codebase | Applied the full 12-file diff from the log, verified with `git apply` |
+| 3 | 42624506031 | `flutter analyze` | `SodiumSumoInit.init()` returns `FutureOr<SodiumSumo>`, not `SodiumSumo`. Probe 2 had read the FFI-specific declaration; the conditional export resolves to one that may be asynchronous, because the web target loads a WebAssembly module first | `initialise()` is now an awaited static method, which covers both targets from one call site |
+| 4 | 42624506031 | `flutter analyze` | A duplicated `const` left by an earlier scripted edit, and a redundant `dart:typed_data` import | Removed both |
+| 5 | 42625696754 | — | — | **Green.** |
+
+Two things are worth keeping from that list. The formatter-style change was
+found only because the formatter contradicted itself between runs, asking for
+opposite layouts of the same construct; the cause was a coupling between the
+SDK constraint and the formatter that is easy to miss. And the diagnostic step
+added in Stage 1, which prints the formatter's diff on failure, paid for itself
+twice here — the layout was applied verbatim rather than guessed at, which
+would have cost several runs.
+
+The evidence table in D-003 was corrected rather than quietly edited: probe 2's
+claim that initialisation was synchronous was wrong, and the record now says so
+and why.
+
+### Not yet verified
+
+| Not verified | Resolved by |
+|---|---|
+| Argon2id timing on a real phone | Measuring on the owner's device; 60 ms on CI says little about a mid-range Android |
+| That the vault format is right for real data | Stage 3, when items exist to store |
+
+No vault can be created or opened from the interface yet. The core is tested
+but not yet wired to a screen, so v0.1.0 remains the installable build and
+still must not hold real passwords.
 
 ---
 
