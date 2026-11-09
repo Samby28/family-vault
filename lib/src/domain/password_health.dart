@@ -212,11 +212,7 @@ abstract final class PasswordHealth {
       final String? weakness = _weakness(password);
       if (weakness != null) {
         issues.add(
-          HealthIssue(
-            item: item,
-            kind: HealthIssueKind.weak,
-            advice: weakness,
-          ),
+          HealthIssue(item: item, kind: HealthIssueKind.weak, advice: weakness),
         );
       }
 

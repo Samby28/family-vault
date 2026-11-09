@@ -158,9 +158,7 @@ void main() {
 
     test('falls back to defaults for out-of-range settings', () {
       final VaultDataDecoding decoded = VaultData.decode(
-        Uint8List.fromList(
-          utf8.encode('{"settings":{"autoLockMinutes":-5}}'),
-        ),
+        Uint8List.fromList(utf8.encode('{"settings":{"autoLockMinutes":-5}}')),
       );
       expect(
         decoded.data.settings.autoLockMinutes,

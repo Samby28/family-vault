@@ -8,18 +8,11 @@ import 'ids.dart';
 /// holds the vault file cannot tell that a folder is called "Banking".
 @immutable
 final class Folder {
-  const Folder({
-    required this.id,
-    required this.name,
-    required this.createdAt,
-  });
+  const Folder({required this.id, required this.name, required this.createdAt});
 
   /// Creates a folder with a new identifier and the current time.
-  factory Folder.create(String name, {DateTime? now}) => Folder(
-    id: Ids.generate(),
-    name: name,
-    createdAt: now ?? DateTime.now(),
-  );
+  factory Folder.create(String name, {DateTime? now}) =>
+      Folder(id: Ids.generate(), name: name, createdAt: now ?? DateTime.now());
 
   /// Reads a folder from its stored form.
   ///

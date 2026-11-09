@@ -50,8 +50,7 @@ final class VaultSettings {
     bool? lockWhenHidden,
   }) => VaultSettings(
     autoLockMinutes: autoLockMinutes ?? this.autoLockMinutes,
-    clipboardClearSeconds:
-        clipboardClearSeconds ?? this.clipboardClearSeconds,
+    clipboardClearSeconds: clipboardClearSeconds ?? this.clipboardClearSeconds,
     lockWhenHidden: lockWhenHidden ?? this.lockWhenHidden,
   );
 

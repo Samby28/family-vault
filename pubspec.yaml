@@ -26,6 +26,9 @@ dependencies:
   # around an HMAC - but the HMAC is, so it comes from a library.
   crypto: ^3.0.0
 
+  # Where to put the vault file on each platform. First-party Flutter plugin.
+  path_provider: ^2.1.0
+
   # libsodium bindings: Argon2id and XChaCha20-Poly1305.
   # Argon2id lives in libsodium's "sumo" interface, reached through
   # package:sodium/sodium_sumo.dart. Version verified by CI run 42620302996 on

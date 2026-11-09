@@ -87,10 +87,7 @@ abstract final class ItemField {
 /// requirement B3.5, "extensible to future item types", comes to in practice.
 enum VaultItemType {
   login('login', 'Login', <ItemFieldSpec>[
-    ItemFieldSpec(
-      key: ItemField.username,
-      label: 'Username',
-    ),
+    ItemFieldSpec(key: ItemField.username, label: 'Username'),
     ItemFieldSpec(
       key: ItemField.email,
       label: 'Email',
@@ -130,11 +127,7 @@ enum VaultItemType {
       label: 'Card number',
       input: FieldInput.secret,
     ),
-    ItemFieldSpec(
-      key: ItemField.expiry,
-      label: 'Expires',
-      hint: 'MM/YY',
-    ),
+    ItemFieldSpec(key: ItemField.expiry, label: 'Expires', hint: 'MM/YY'),
     ItemFieldSpec(
       key: ItemField.securityCode,
       label: 'Security code',
@@ -228,8 +221,9 @@ final class VaultItem {
       notes: notes,
       createdAt: stamp,
       updatedAt: stamp,
-      passwordUpdatedAt:
-          (fields[ItemField.password] ?? '').isEmpty ? null : stamp,
+      passwordUpdatedAt: (fields[ItemField.password] ?? '').isEmpty
+          ? null
+          : stamp,
     );
   }
 

@@ -72,10 +72,7 @@ void main() {
     });
 
     test('flags a simple sequence', () {
-      for (final String sequence in <String>[
-        '123456789012',
-        'abcdefghijkl',
-      ]) {
+      for (final String sequence in <String>['123456789012', 'abcdefghijkl']) {
         final HealthReport report = PasswordHealth.check(
           vaultOf(<VaultItem>[login('Bank', sequence)]),
           now: now,

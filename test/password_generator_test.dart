@@ -173,13 +173,15 @@ void main() {
       }
     });
 
-    test('clamp a request below the minimum rather than producing one word',
-        () {
-      final String phrase = generator.passphrase(
-        const PassphraseRecipe(wordCount: 1),
-      );
-      expect(phrase.split('-').length, PassphraseRecipe.minWords);
-    });
+    test(
+      'clamp a request below the minimum rather than producing one word',
+      () {
+        final String phrase = generator.passphrase(
+          const PassphraseRecipe(wordCount: 1),
+        );
+        expect(phrase.split('-').length, PassphraseRecipe.minWords);
+      },
+    );
 
     test('use the chosen separator', () {
       final String phrase = generator.passphrase(
@@ -249,8 +251,11 @@ void main() {
   group('usernames', () {
     test('look like two words and a number', () {
       final String username = generator.username();
-      expect(RegExp(r'^[a-z]+\.[a-z]+[0-9]{1,3}$').hasMatch(username), isTrue,
-          reason: username);
+      expect(
+        RegExp(r'^[a-z]+\.[a-z]+[0-9]{1,3}$').hasMatch(username),
+        isTrue,
+        reason: username,
+      );
     });
 
     test('vary', () {

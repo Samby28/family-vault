@@ -62,10 +62,7 @@ void main() {
 
     vectors.forEach((int seconds, String code) {
       test('at $seconds seconds gives $code', () {
-        final TotpConfig config = TotpConfig(
-          secret: sha1Secret,
-          digits: 8,
-        );
+        final TotpConfig config = TotpConfig(secret: sha1Secret, digits: 8);
         expect(Totp.generate(config, time: at(seconds)), code);
       });
     });
@@ -114,9 +111,10 @@ void main() {
       final DateTime when = at(59);
       expect(Totp.generate(six, time: when), '287082');
       expect(
-        Totp.generate(eight, time: when).endsWith(
-          Totp.generate(six, time: when),
-        ),
+        Totp.generate(
+          eight,
+          time: when,
+        ).endsWith(Totp.generate(six, time: when)),
         isTrue,
       );
     });
@@ -192,13 +190,15 @@ void main() {
       expect(config.period, 60);
     });
 
-    test('defaults to SHA-1 when the algorithm is unknown, as the RFC does',
-        () {
-      final TotpConfig config = TotpConfig.fromUri(
-        'otpauth://totp/A:b?secret=GEZDGNBVGY3TQOJQ&algorithm=SHA3',
-      );
-      expect(config.algorithm, TotpAlgorithm.sha1);
-    });
+    test(
+      'defaults to SHA-1 when the algorithm is unknown, as the RFC does',
+      () {
+        final TotpConfig config = TotpConfig.fromUri(
+          'otpauth://totp/A:b?secret=GEZDGNBVGY3TQOJQ&algorithm=SHA3',
+        );
+        expect(config.algorithm, TotpAlgorithm.sha1);
+      },
+    );
 
     test('falls back to sane values for absurd digits or period', () {
       final TotpConfig config = TotpConfig.fromUri(

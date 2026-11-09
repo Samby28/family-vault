@@ -62,10 +62,7 @@ void main() {
 
   group('rejects what it cannot decode', () {
     test('a character outside the alphabet', () {
-      expect(
-        () => Base32.decode('MZXW6YTB!'),
-        throwsA(isA<FormatException>()),
-      );
+      expect(() => Base32.decode('MZXW6YTB!'), throwsA(isA<FormatException>()));
     });
 
     test('the digits 0, 1 and 8, which base32 does not use', () {
