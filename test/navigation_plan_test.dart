@@ -8,8 +8,9 @@ void main() {
     });
 
     test('lists the sections in the specified order', () {
-      final List<String> labels =
-          plannedSections.map((AppSection section) => section.label).toList();
+      final List<String> labels = plannedSections
+          .map((AppSection section) => section.label)
+          .toList();
       expect(labels, <String>[
         'Dashboard',
         'All Items',
@@ -37,8 +38,9 @@ void main() {
     });
 
     test('has no duplicate section labels', () {
-      final Set<String> labels =
-          plannedSections.map((AppSection section) => section.label).toSet();
+      final Set<String> labels = plannedSections
+          .map((AppSection section) => section.label)
+          .toSet();
       expect(labels.length, plannedSections.length);
     });
 
@@ -52,7 +54,8 @@ void main() {
       expect(
         overclaimed,
         isEmpty,
-        reason: 'sections marked working without an implementation: '
+        reason:
+            'sections marked working without an implementation: '
             '${overclaimed.map((AppSection s) => s.label).join(', ')}',
       );
     });

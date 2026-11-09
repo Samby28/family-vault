@@ -183,8 +183,9 @@ class _SectionGrid extends StatelessWidget {
     final List<Widget> rows = <Widget>[];
     for (int i = 0; i < sections.length; i += 2) {
       final AppSection left = sections[i];
-      final AppSection? right =
-          i + 1 < sections.length ? sections[i + 1] : null;
+      final AppSection? right = i + 1 < sections.length
+          ? sections[i + 1]
+          : null;
       rows.add(
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,

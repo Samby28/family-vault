@@ -84,10 +84,7 @@ final class VaultCodec {
   /// matters: the header is parsed and its parameters bounds-checked before
   /// any key derivation, so a hostile file cannot make the application
   /// allocate a gigabyte of memory before it is inspected.
-  Uint8List open({
-    required Uint8List file,
-    required String masterPassword,
-  }) {
+  Uint8List open({required Uint8List file, required String masterPassword}) {
     final VaultHeader header = VaultHeader.decode(file);
 
     final int headerLength = header.length;
@@ -104,9 +101,7 @@ final class VaultCodec {
     final Uint8List headerBytes = Uint8List.fromList(
       file.sublist(0, headerLength),
     );
-    final Uint8List ciphertext = Uint8List.fromList(
-      file.sublist(headerLength),
-    );
+    final Uint8List ciphertext = Uint8List.fromList(file.sublist(headerLength));
 
     final VaultKey key = _crypto.deriveKey(
       masterPassword: masterPassword,

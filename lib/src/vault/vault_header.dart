@@ -129,9 +129,7 @@ final class VaultHeader {
     }
     for (int i = 0; i < magic.length; i++) {
       if (bytes[i] != magic[i]) {
-        throw const VaultFormatFailure(
-          'This is not a Family Vault file.',
-        );
+        throw const VaultFormatFailure('This is not a Family Vault file.');
       }
     }
 
@@ -141,9 +139,9 @@ final class VaultHeader {
       throw VaultVersionFailure(
         version > currentFormatVersion
             ? 'This vault was created by a newer version of Family Vault. '
-                'Please update the app to open it.'
+                  'Please update the app to open it.'
             : 'This vault uses an old format (version $version) that this '
-                'build no longer reads.',
+                  'build no longer reads.',
         fileVersion: version,
       );
     }

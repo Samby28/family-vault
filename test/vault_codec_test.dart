@@ -24,8 +24,7 @@ void main() {
     codec = VaultCodec(crypto);
   });
 
-  Uint8List payloadOf(String text) =>
-      Uint8List.fromList(utf8.encode(text));
+  Uint8List payloadOf(String text) => Uint8List.fromList(utf8.encode(text));
 
   group('sealing and opening', () {
     test('round-trips a payload', () {
@@ -46,10 +45,7 @@ void main() {
         masterPassword: 'pw',
         payload: Uint8List(0),
       );
-      expect(
-        codec.open(file: file, masterPassword: 'pw'),
-        isEmpty,
-      );
+      expect(codec.open(file: file, masterPassword: 'pw'), isEmpty);
     });
 
     test('produces a file that starts with a readable header', () {
@@ -67,10 +63,7 @@ void main() {
 
     test('the file is exactly the header followed by the sealed payload', () {
       final Uint8List payload = payloadOf('hello');
-      final Uint8List file = codec.seal(
-        masterPassword: 'pw',
-        payload: payload,
-      );
+      final Uint8List file = codec.seal(masterPassword: 'pw', payload: payload);
       final VaultHeader header = codec.inspect(file);
       expect(file.length, header.length + payload.length + crypto.tagLength);
     });
@@ -97,10 +90,7 @@ void main() {
         payload: payloadOf('same'),
         reuseSalt: codec.inspect(first).salt,
       );
-      expect(
-        codec.inspect(second).nonce,
-        isNot(codec.inspect(first).nonce),
-      );
+      expect(codec.inspect(second).nonce, isNot(codec.inspect(first).nonce));
     });
 
     test('identical payloads do not produce identical files', () {
@@ -131,10 +121,7 @@ void main() {
         masterPassword: 'pw',
         payload: payloadOf('a'),
       );
-      expect(
-        codec.inspect(second).salt,
-        isNot(codec.inspect(first).salt),
-      );
+      expect(codec.inspect(second).salt, isNot(codec.inspect(first).salt));
     });
 
     test('re-sealing an existing vault keeps its salt', () {
@@ -149,10 +136,7 @@ void main() {
         reuseSalt: salt,
       );
       expect(codec.inspect(second).salt, salt);
-      expect(
-        codec.open(file: second, masterPassword: 'pw'),
-        payloadOf('b'),
-      );
+      expect(codec.open(file: second, masterPassword: 'pw'), payloadOf('b'));
     });
 
     test('rejects a salt of the wrong length', () {
@@ -251,10 +235,7 @@ void main() {
         masterPassword: 'pw',
         payload: payloadOf('x'),
       );
-      expect(
-        codec.inspect(file).kdfParameters,
-        crypto.recommendedParameters,
-      );
+      expect(codec.inspect(file).kdfParameters, crypto.recommendedParameters);
     });
 
     test('honours explicit parameters and stores them in the header', () {

@@ -57,6 +57,6 @@ final class VaultAuthenticationFailure extends VaultFailure {
   const VaultAuthenticationFailure([
     super.message =
         'Could not open the vault. The master password may be wrong, or the '
-            'file may have been changed or damaged.',
+        'file may have been changed or damaged.',
   ]);
 }

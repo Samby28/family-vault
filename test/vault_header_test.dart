@@ -17,18 +17,17 @@ void main() {
   VaultHeader sampleHeader({
     int opsLimit = 2,
     int memLimitBytes = 64 * 1024 * 1024,
-  }) =>
-      VaultHeader(
-        formatVersion: VaultHeader.currentFormatVersion,
-        kdfAlgorithm: KdfAlgorithmId.argon2id13,
-        cipher: CipherId.xChaCha20Poly1305Ietf,
-        kdfParameters: Argon2idParameters(
-          opsLimit: opsLimit,
-          memLimitBytes: memLimitBytes,
-        ),
-        salt: bytesOf(16, 0xAB),
-        nonce: bytesOf(24, 0xCD),
-      );
+  }) => VaultHeader(
+    formatVersion: VaultHeader.currentFormatVersion,
+    kdfAlgorithm: KdfAlgorithmId.argon2id13,
+    cipher: CipherId.xChaCha20Poly1305Ietf,
+    kdfParameters: Argon2idParameters(
+      opsLimit: opsLimit,
+      memLimitBytes: memLimitBytes,
+    ),
+    salt: bytesOf(16, 0xAB),
+    nonce: bytesOf(24, 0xCD),
+  );
 
   group('encoding', () {
     test('round-trips every field unchanged', () {

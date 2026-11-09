@@ -34,10 +34,7 @@ void main() {
     test('compares by value, so headers can be compared', () {
       expect(
         sane,
-        const Argon2idParameters(
-          opsLimit: 2,
-          memLimitBytes: 64 * 1024 * 1024,
-        ),
+        const Argon2idParameters(opsLimit: 2, memLimitBytes: 64 * 1024 * 1024),
       );
       expect(
         sane.hashCode,

@@ -63,10 +63,7 @@ final class Argon2idParameters {
     required int opsLimit,
     required int memLimitKib,
   }) =>
-      Argon2idParameters(
-        opsLimit: opsLimit,
-        memLimitBytes: memLimitKib * 1024,
-      );
+      Argon2idParameters(opsLimit: opsLimit, memLimitBytes: memLimitKib * 1024);
 
   /// Throws [VaultParameterFailure] unless both values are within the bounds
   /// above and the memory cost is a whole number of kibibytes.
@@ -97,9 +94,9 @@ final class Argon2idParameters {
   /// A copy with the memory cost rounded down to a whole kibibyte, so that it
   /// survives a round trip through the header unchanged.
   Argon2idParameters alignedToKib() => Argon2idParameters(
-        opsLimit: opsLimit,
-        memLimitBytes: (memLimitBytes ~/ 1024) * 1024,
-      );
+    opsLimit: opsLimit,
+    memLimitBytes: (memLimitBytes ~/ 1024) * 1024,
+  );
 
   @override
   bool operator ==(Object other) =>
@@ -111,6 +108,7 @@ final class Argon2idParameters {
   int get hashCode => Object.hash(opsLimit, memLimitBytes);
 
   @override
-  String toString() => 'Argon2idParameters(opsLimit: $opsLimit, '
+  String toString() =>
+      'Argon2idParameters(opsLimit: $opsLimit, '
       'memLimit: ${memLimitBytes ~/ (1024 * 1024)} MiB)';
 }

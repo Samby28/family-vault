@@ -144,10 +144,7 @@ void main() {
         crypto.recommendedParameters.memLimitBytes,
         greaterThanOrEqualTo(owaspMinimumMemory),
       );
-      expect(
-        crypto.recommendedParameters.opsLimit,
-        greaterThanOrEqualTo(1),
-      );
+      expect(crypto.recommendedParameters.opsLimit, greaterThanOrEqualTo(1));
       expect(crypto.recommendedParameters.validate, returnsNormally);
     });
 
@@ -156,10 +153,7 @@ void main() {
         masterPassword: 'pw',
         payload: payloadOf('x'),
       );
-      expect(
-        codec.inspect(file).kdfParameters,
-        crypto.recommendedParameters,
-      );
+      expect(codec.inspect(file).kdfParameters, crypto.recommendedParameters);
     });
   });
 
@@ -264,9 +258,7 @@ void main() {
         payload: payloadOf('payload'),
         parameters: fastCosts,
       );
-      final Uint8List extended = Uint8List.fromList(
-        <int>[...original, 0x00],
-      );
+      final Uint8List extended = Uint8List.fromList(<int>[...original, 0x00]);
       expect(
         () => codec.open(file: extended, masterPassword: 'append test'),
         throwsA(isA<VaultFailure>()),
@@ -287,9 +279,10 @@ void main() {
       final int headerLength = codec.inspect(a).length;
       // a's header with b's ciphertext: the nonce and salt no longer match the
       // sealed data, so this must fail.
-      final Uint8List spliced = Uint8List.fromList(
-        <int>[...a.sublist(0, headerLength), ...b.sublist(headerLength)],
-      );
+      final Uint8List spliced = Uint8List.fromList(<int>[
+        ...a.sublist(0, headerLength),
+        ...b.sublist(headerLength),
+      ]);
       expect(
         () => codec.open(file: spliced, masterPassword: 'pw'),
         throwsA(isA<VaultFailure>()),
@@ -324,9 +317,10 @@ void main() {
         parameters: fastCosts,
       );
       final int headerLength = codec.inspect(a).length;
-      final Uint8List spliced = Uint8List.fromList(
-        <int>[...b.sublist(0, headerLength), ...a.sublist(headerLength)],
-      );
+      final Uint8List spliced = Uint8List.fromList(<int>[
+        ...b.sublist(0, headerLength),
+        ...a.sublist(headerLength),
+      ]);
       expect(
         () => codec.open(file: spliced, masterPassword: 'pw'),
         throwsA(isA<VaultFailure>()),

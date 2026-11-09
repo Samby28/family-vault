@@ -46,10 +46,8 @@ final class FakeCryptoService implements CryptoService {
   int get tagLength => 16;
 
   @override
-  Argon2idParameters get recommendedParameters => const Argon2idParameters(
-        opsLimit: 2,
-        memLimitBytes: 64 * 1024 * 1024,
-      );
+  Argon2idParameters get recommendedParameters =>
+      const Argon2idParameters(opsLimit: 2, memLimitBytes: 64 * 1024 * 1024);
 
   @override
   Uint8List randomBytes(int length) {
