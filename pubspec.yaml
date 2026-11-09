@@ -1,0 +1,24 @@
+name: family_vault
+description: "Family Vault - a secure, offline-first, zero-knowledge password manager for Android and Windows."
+publish_to: "none"
+
+# version+build. The build number is bumped by CI for release tags.
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+# Stage 1 intentionally has no third-party runtime dependencies.
+# Packages are added one per commit from Stage 2 onward, each confirmed green in
+# CI before the next. See docs/decisions-and-risks.md, decision D-002.
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ">=4.0.0 <8.0.0"
+
+flutter:
+  uses-material-design: true
