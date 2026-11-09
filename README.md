@@ -7,10 +7,13 @@ Your passwords are encrypted on your own device with a key derived from your
 master password. There is no server, no account to create, and nothing that any
 third party — including the people who built this — can decrypt.
 
-> **Project status: Stage 1 of 6.** The project scaffold and the automated build
-> pipeline are in place. The encrypted vault itself is the next stage and is not
-> yet implemented. **Do not store real passwords in this version.**
-> See [`docs/progress-log.md`](docs/progress-log.md) for exactly what works.
+> **Project status: Stage 1 of 6 complete.** The scaffold and the automated build
+> pipeline are green: 11 of 11 tests pass, and an Android APK and a Windows
+> application are produced on every push. The encrypted vault itself is the next
+> stage and is **not yet implemented**, so **do not store real passwords in this
+> version** — there is nowhere for them to go.
+> See [`docs/progress-log.md`](docs/progress-log.md) for exactly what works and
+> [`docs/known-limitations.md`](docs/known-limitations.md) for what does not.
 
 ---
 

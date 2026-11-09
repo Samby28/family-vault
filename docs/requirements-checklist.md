@@ -30,13 +30,13 @@ These override convenience at every decision point.
 | A2 | No central server; no server able to decrypt a vault | MP 5.1, MP 11 | COMPLETED (none exists) |
 | A3 | Cloud drive receives encrypted vault files only | MP 5.1, FI 1 | NOT STARTED |
 | A4 | Titles, URLs, usernames, notes and folder names are all inside the encrypted payload | MP 5.1, FI 1 | NOT STARTED |
-| A5 | No vault contents, master password, keys or TOTP secrets sent to analytics, logs or any external service | MP 5.1 | IN PROGRESS (no network code exists) |
+| A5 | No vault contents, master password, keys or TOTP secrets sent to analytics, logs or any external service | MP 5.1 | COMPLETED for Stage 1 (no network code exists; `avoid_print` enforced) |
 | A6 | Cryptographic primitives are never hand-implemented; vetted libraries only | MP 4, FI 1 | NOT STARTED |
-| A7 | Public repository contains no real credentials, vault files, keys or family data | BR, MP 13 | IN PROGRESS (guard in `.gitignore`) |
+| A7 | Public repository contains no real credentials, vault files, keys or family data | BR, MP 13 | COMPLETED for Stage 1 (`.gitignore` guard; verified no secret material present) |
 | A8 | Two-factor protection for opening a vault is optional and off by default | MP 6, FI 4 | NOT STARTED |
 | A9 | No TOTP code check offered as a substitute for encryption-key protection | MP 6, FI 4 | NOT STARTED |
 | A10 | No paid services, subscriptions or hosted infrastructure introduced | MP 11 | COMPLETED (none used) |
-| A11 | Implemented features are distinguished from planned and demo-only features in all documentation | MP 2, MP 21 | IN PROGRESS |
+| A11 | Implemented features are distinguished from planned and demo-only features in all documentation | MP 2, MP 21 | COMPLETED |
 
 ---
 
@@ -150,7 +150,7 @@ These override convenience at every decision point.
 
 | ID | Requirement | Source | Status |
 |---|---|---|---|
-| B9.1 | Installable Android APK | BR, MP 8.1, FI 3 | IN PROGRESS (pipeline built, not yet run) |
+| B9.1 | Installable Android APK | BR, MP 8.1, FI 3 | TESTING (builds in CI at 45.8 MB; awaiting owner install on a phone) |
 | B9.2 | Responsive smartphone interface | MP 8.1 | NOT STARTED |
 | B9.3 | Android Keystore integration | MP 4, MP 8.1 | NOT STARTED |
 | B9.4 | Android Autofill Framework integration, selectable as system provider | MP 4, MP 8.1, FI 3 | NOT STARTED |
@@ -162,12 +162,12 @@ These override convenience at every decision point.
 
 | ID | Requirement | Source | Status |
 |---|---|---|---|
-| B10.1 | Native Flutter Windows build | BR, MP 8.2, FI 3 | IN PROGRESS (pipeline built, not yet run) |
+| B10.1 | Native Flutter Windows build | BR, MP 8.2, FI 3 | TESTING (`family_vault.exe` builds in CI; awaiting owner run on Windows) |
 | B10.2 | Feature parity with Android for vault, items, generator, TOTP, health, search, import/export | MP 8.2 | NOT STARTED |
 | B10.3 | Secure local storage on Windows | MP 8.2 | NOT STARTED |
 | B10.4 | Optional Windows Hello where supported | MP 4, MP 8.2 | NOT STARTED |
 | B10.5 | Distributable package or installer | MP 8.2 | NOT STARTED |
-| B10.6 | Architecture left extensible to macOS and Linux without delaying Windows | MP 8.2 | IN PROGRESS |
+| B10.6 | Architecture left extensible to macOS and Linux without delaying Windows | MP 8.2 | COMPLETED for Stage 1 (no Windows-only code in shared layers) |
 
 ### B11. Interface
 
@@ -175,8 +175,8 @@ These override convenience at every decision point.
 |---|---|---|---|
 | B11.1 | Twelve-destination navigation: Dashboard, All Items, Logins, Secure Notes, Cards, Identities, Folders, Favourites, Authenticator, Password Health, Trash, Settings | MP 12 | NOT STARTED |
 | B11.2 | Dashboard counters: items, folders, weak, reused, needs attention, favourites | MP 12 | NOT STARTED |
-| B11.3 | Light and dark themes | MP 12 | IN PROGRESS (theme wired in scaffold) |
-| B11.4 | Responsive layouts consistent across Android and Windows | MP 12 | IN PROGRESS |
+| B11.3 | Light and dark themes | MP 12 | IN PROGRESS (both themes wired and following the platform setting) |
+| B11.4 | Responsive layouts consistent across Android and Windows | MP 12 | IN PROGRESS (shell switches layout at 900 px) |
 | B11.5 | Confirmation dialogs on every destructive action | MP 12 | NOT STARTED |
 | B11.6 | Plain-language security messages, not unexplained jargon | MP 12 | NOT STARTED |
 | B11.7 | No sensitive data shown on the dashboard unnecessarily | MP 12 | NOT STARTED |
@@ -186,14 +186,14 @@ These override convenience at every decision point.
 | ID | Requirement | Source | Status |
 |---|---|---|---|
 | B12.1 | GitHub repository as central source control | BR, MP 13 | COMPLETED |
-| B12.2 | GitHub Actions automated builds | BR, MP 13 | IN PROGRESS |
-| B12.3 | Automated Android APK build on every relevant push | BR, MP 13 | IN PROGRESS |
-| B12.4 | Automated Windows build | BR, MP 13 | IN PROGRESS |
-| B12.5 | Build artifacts published | BR, MP 13 | IN PROGRESS |
-| B12.6 | GitHub Releases for installable versions | BR, MP 13 | IN PROGRESS |
-| B12.7 | Analyzer and automated tests run in CI, blocking on failure | MP 16 | IN PROGRESS |
-| B12.8 | Build failures diagnosed from logs and fixed, never hidden or misreported | MP 17 | IN PROGRESS |
-| B12.9 | Public web demonstration on a shareable URL, dummy data only, labelled as a demo | BR, MP 14, FI 3 | IN PROGRESS |
+| B12.2 | GitHub Actions automated builds | BR, MP 13 | COMPLETED |
+| B12.3 | Automated Android APK build on every relevant push | BR, MP 13 | COMPLETED |
+| B12.4 | Automated Windows build | BR, MP 13 | COMPLETED |
+| B12.5 | Build artifacts published | BR, MP 13 | COMPLETED |
+| B12.6 | GitHub Releases for installable versions | BR, MP 13 | TESTING (workflow written; first tag publishing now) |
+| B12.7 | Analyzer and automated tests run in CI, blocking on failure | MP 16 | COMPLETED (format, analyse and test all blocking) |
+| B12.8 | Build failures diagnosed from logs and fixed, never hidden or misreported | MP 17 | COMPLETED (three failures diagnosed and fixed; see progress log) |
+| B12.9 | Public web demonstration on a shareable URL, dummy data only, labelled as a demo | BR, MP 14, FI 3 | BLOCKED (builds and is downloadable; live URL needs Pages enabled by owner) |
 
 ---
 

@@ -13,7 +13,7 @@ tests covering it pass in CI. A screen that renders is not a completed feature.
 
 | Stage | Deliverable | Status |
 |---|---|---|
-| 1 | Flutter scaffold and GitHub Actions build pipeline | **TESTING** — written, awaiting first CI run |
+| 1 | Flutter scaffold and GitHub Actions build pipeline | **COMPLETED** — green on all jobs, run 42612638343 |
 | 2 | Cryptographic core: Argon2id, authenticated encryption, vault format, tests | NOT STARTED |
 | 3 | Vault interface: folders, logins, notes, cards, identities, generator, search, lock screen, trash | NOT STARTED |
 | 4 | TOTP authenticator and password-health reporting | NOT STARTED |
@@ -22,10 +22,88 @@ tests covering it pass in CI. A screen that renders is not a completed feature.
 
 ---
 
+## 2026-11-09 — Stage 1 closed: pipeline green on all platforms
+
+**Status: COMPLETED.** CI run `42612638343` on commit `83e45b6` is green on all
+three jobs. Four pushes were needed; each failure, including one I misreported,
+is recorded below.
+
+### Evidence
+
+| Check | Result |
+|---|---|
+| Toolchain | Flutter 3.47.9, stable, now pinned in all workflows |
+| `dart format` | PASS, blocking |
+| `flutter analyze` | PASS, no issues |
+| `flutter test` | **11 of 11 passed** |
+| Android release APK | **Built, 45.8 MB** (`app-release.apk`, 21.5 MB compressed artifact) |
+| Windows release build | **Built**, `family_vault.exe` (11.3 MB compressed artifact) |
+| Web demonstration | **Built**, downloadable artifact; live URL blocked on Pages |
+| Coverage | Collected and uploaded |
+
+### Build failures, and how each was fixed
+
+Four CI runs were needed. Per MP 17, each is recorded rather than hidden.
+
+| # | Run | Failed at | Cause | Fix |
+|---|---|---|---|---|
+| 1 | 42609591764 | `flutter analyze` | `dangling_library_doc_comments` in `build_info.dart` — a file-level doc comment with no `library` directive to attach to | Added `library;` |
+| 2 | 42610134562 | `dart format` | **A failure I had misreported.** Run 1 showed the format step as "success", so I stated in a commit message that the hand-written source was already format-clean. It was not: the step carried `continue-on-error`, which reports a step as successful even when the command fails. Making the check blocking is what exposed it. | Corrected the record in the next commit message; added a step that prints the formatter's diff on failure, since this environment has no Dart SDK to run the formatter |
+| 3 | 42610812140 | `dart format` | Two test files laid out differently from the formatter's preference | Applied the printed diff verbatim rather than guessing |
+| 4 | 42611264390 | — | — | **Green.** APK and Windows build both produced |
+
+The lesson from failure 2 is now a standing rule for this project: **`continue-on-error`
+makes a step report success, so it hides exactly what CI exists to reveal.** It is
+used only where a failure is genuinely acceptable, and where it is used, a
+following step states plainly what failed and what to do about it. The Pages
+deployment is the one remaining place it appears, and it now does that.
+
+### Also done in this stage
+
+- **Platform projects committed.** `android/`, `windows/` and `web/` were
+  generated in CI from Flutter 3.47.9's templates and committed, along with the
+  resolved `pubspec.lock`. The repository is now self-contained: a reviewer can
+  clone it and run `flutter build` with no extra step. The one-time bootstrap
+  workflow was removed; `tool/bootstrap_platforms.sh` stays as a no-op for a
+  clean tree.
+- **Product names corrected.** The generated templates carried the Dart package
+  name `family_vault` into the Android launcher label, the Windows title bar and
+  file properties, and the web page title. All are now "Family Vault". Identifiers
+  (`applicationId`, `namespace`, Kotlin package, `BINARY_NAME`) were deliberately
+  left alone, because an application identifier is a permanent identity and
+  changing it later would stop an installed app upgrading in place.
+- **Flutter pinned** to 3.47.9 so builds stay reproducible and the toolchain is
+  raised deliberately rather than drifting with the stable channel.
+
+### Blocked
+
+**Open question 2 — GitHub Pages is not enabled**, so the web demonstration has
+no public URL. The build itself succeeds and the demo is downloadable from the
+`family-vault-web-demo` artifact, so nothing is lost but the shareable link.
+
+*Owner action:* at **Settings → Pages**, set Source to **GitHub Actions**. The
+next push publishes it to `https://samby28.github.io/family-vault/`.
+
+R-001 (no write access) is **closed** — the first push succeeded.
+
+### Not yet verified
+
+| Not verified | Resolved by |
+|---|---|
+| The APK installs and runs on a real phone | Owner installing it from the Releases page |
+| The Windows build runs on a real Windows machine | Owner unzipping and running it |
+| Behaviour on a physical device of any kind | Owner testing |
+
+Nothing has run outside a CI container. The builds exist and are green; that is
+not the same as having been used.
+
+---
+
 ## 2026-11-09 — Stage 1: scaffold and pipeline
 
-**Status: TESTING.** Code and pipeline written. Nothing has been compiled or
-executed yet, because the authoring environment has no Flutter or Android SDK
+**Status: superseded by the entry above, which closes this stage.** At the time
+of writing, nothing had been compiled or executed, because the authoring
+environment has no Flutter or Android SDK
 and its network policy refuses `pub.dev`, `dl.google.com`, `maven.google.com`
 and `services.gradle.org`. This was verified by direct connection attempts, not
 assumed. The first CI run is the first compilation and the first test execution.

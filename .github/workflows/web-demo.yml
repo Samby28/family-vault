@@ -79,4 +79,19 @@ jobs:
     steps:
       - name: Deploy
         id: deployment
+        continue-on-error: true
         uses: actions/deploy-pages@v4
+
+      # A 404 from the deployment above means Pages is not switched on for this
+      # repository, which is a repository setting and not something the build
+      # can fix. Say that plainly instead of leaving a bare HTTP error in the
+      # log, and point at the one place it is changed.
+      - name: Explain a failed deployment
+        if: steps.deployment.outcome == 'failure'
+        run: |
+          echo "::warning title=GitHub Pages is not enabled::The demonstration \
+          built successfully but could not be published. Enable it at \
+          Settings -> Pages, with Source set to 'GitHub Actions', then re-run \
+          this workflow. Until then the demo is still available as the \
+          'family-vault-web-demo' artifact on this run."
+          exit 1
