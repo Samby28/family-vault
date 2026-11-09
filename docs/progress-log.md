@@ -124,7 +124,24 @@ next push publishes it to `https://samby28.github.io/family-vault/`.
 
 R-001 (no write access) is **closed** — the first push succeeded.
 
-### Not yet verified
+### Owner device verification — 9 November 2026
+
+The owner installed and ran v0.1.0 on both targets. **Both run.**
+
+| Target | Result |
+|---|---|
+| Android phone | APK installs and the app runs |
+| Windows laptop | Application runs |
+
+The owner noted that no information can be entered and no sections open. That
+is the expected Stage 1 behaviour, not a fault: there is no vault yet, so there
+is nothing to type into, and tapping a section raises a message saying it is not
+built rather than opening an empty screen.
+
+This closes the two items that had been held at TESTING because nothing had run
+outside a CI container. B9.1 and B10.1 are now COMPLETED.
+
+### Superseded: not yet verified at the time of the entry above
 
 | Not verified | Resolved by |
 |---|---|

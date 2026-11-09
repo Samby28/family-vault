@@ -150,7 +150,7 @@ These override convenience at every decision point.
 
 | ID | Requirement | Source | Status |
 |---|---|---|---|
-| B9.1 | Installable Android APK | BR, MP 8.1, FI 3 | TESTING (builds in CI at 45.8 MB; awaiting owner install on a phone) |
+| B9.1 | Installable Android APK | BR, MP 8.1, FI 3 | COMPLETED (built in CI; installed and running on the owner's phone, 9 Nov 2026) |
 | B9.2 | Responsive smartphone interface | MP 8.1 | NOT STARTED |
 | B9.3 | Android Keystore integration | MP 4, MP 8.1 | NOT STARTED |
 | B9.4 | Android Autofill Framework integration, selectable as system provider | MP 4, MP 8.1, FI 3 | NOT STARTED |
@@ -162,7 +162,7 @@ These override convenience at every decision point.
 
 | ID | Requirement | Source | Status |
 |---|---|---|---|
-| B10.1 | Native Flutter Windows build | BR, MP 8.2, FI 3 | TESTING (`family_vault.exe` builds in CI; awaiting owner run on Windows) |
+| B10.1 | Native Flutter Windows build | BR, MP 8.2, FI 3 | COMPLETED (built in CI; running on the owner's laptop, 9 Nov 2026) |
 | B10.2 | Feature parity with Android for vault, items, generator, TOTP, health, search, import/export | MP 8.2 | NOT STARTED |
 | B10.3 | Secure local storage on Windows | MP 8.2 | NOT STARTED |
 | B10.4 | Optional Windows Hello where supported | MP 4, MP 8.2 | NOT STARTED |

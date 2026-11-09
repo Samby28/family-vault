@@ -1,0 +1,125 @@
+name: Crypto library probe
+
+# Temporary, manually triggered. Settles decision D-003 with evidence instead
+# of assumption.
+#
+# Two questions have to be answered before the cryptographic core can be
+# written, and neither can be answered in the authoring environment, which has
+# no Flutter SDK and cannot reach pub.dev:
+#
+#   1. Does adding libsodium bindings still build an Android APK and a Windows
+#      application? A native dependency can break either.
+#   2. What is the exact API of the resolved version? Guessing method
+#      signatures from documentation snippets wastes CI runs, so this prints
+#      the package's own public interface from the pub cache.
+#
+# Removed once D-003 is recorded.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  resolve-and-inspect:
+    name: Resolve, then print the real API
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.9
+          cache: true
+
+      - name: Add the candidate packages
+        run: |
+          flutter pub add sodium sodium_libs
+          echo "::group::Resolved versions"
+          grep -A1 -E "^  sodium" pubspec.yaml || true
+          flutter pub deps --no-dev --style=compact | grep -iE "sodium|ffi" || true
+          echo "::endgroup::"
+
+      # libsodium must be present for host unit tests to exercise the real
+      # primitives rather than a stand-in.
+      - name: Check libsodium availability on the runner
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libsodium-dev
+          echo "::group::Installed libsodium"
+          dpkg -l | grep -i sodium || true
+          ldconfig -p | grep -i sodium || true
+          echo "::endgroup::"
+
+      - name: Print the public API this project will be written against
+        run: |
+          ROOT=$(find "${PUB_CACHE:-$HOME/.pub-cache}" -maxdepth 4 -type d -name "sodium-*" | head -1)
+          LIBS=$(find "${PUB_CACHE:-$HOME/.pub-cache}" -maxdepth 4 -type d -name "sodium_libs-*" | head -1)
+          echo "sodium at: $ROOT"
+          echo "sodium_libs at: $LIBS"
+
+          for f in \
+            "$LIBS/lib/sodium_libs.dart" \
+            "$ROOT/lib/sodium.dart" \
+            "$ROOT/lib/src/api/sodium.dart" \
+            "$ROOT/lib/src/api/crypto.dart" \
+            "$ROOT/lib/src/api/pwhash.dart" \
+            "$ROOT/lib/src/api/aead.dart" \
+            "$ROOT/lib/src/api/secure_key.dart" \
+            "$ROOT/lib/src/api/randombytes.dart" \
+            "$ROOT/lib/src/api/sodium_init.dart"
+          do
+            if [ -f "$f" ]; then
+              echo "::group::$(basename "$f")"
+              # Declarations only: the signatures, not the implementations.
+              grep -nE "^(abstract |final |sealed )?class|^ *(abstract|external)? *[A-Za-z0-9_<>, ?\[\]]+ +[a-zA-Z0-9_]+\(|^ *[A-Za-z0-9_<>, ?]+ get |^ *static |^ *const |^enum |^ *factory " "$f" | head -80
+              echo "::endgroup::"
+            else
+              echo "MISSING: $f"
+            fi
+          done
+
+          echo "::group::All api files present"
+          find "$ROOT/lib" -name "*.dart" | sed "s|$ROOT/||" | sort
+          echo "::endgroup::"
+
+  build-android:
+    name: Does an APK still build with libsodium?
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.9
+          cache: true
+      - run: flutter pub add sodium sodium_libs
+      - name: Build release APK
+        run: flutter build apk --release
+      - run: ls -lh build/app/outputs/flutter-apk/
+
+  build-windows:
+    name: Does a Windows build still work with libsodium?
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.9
+          cache: true
+      - run: flutter pub add sodium sodium_libs
+      - name: Build release application
+        run: flutter build windows --release
+      - name: List output and confirm libsodium ships beside the app
+        shell: pwsh
+        run: |
+          $dir = "build/windows/x64/runner/Release"
+          if (-not (Test-Path $dir)) { $dir = "build/windows/runner/Release" }
+          Get-ChildItem $dir | Select-Object Name, Length
