@@ -79,8 +79,7 @@ final class Argon2idParameters {
         'the supported range of $minOpsLimit to $maxOpsLimit.',
       );
     }
-    if (memLimitBytes < minMemLimitBytes ||
-        memLimitBytes > maxMemLimitBytes) {
+    if (memLimitBytes < minMemLimitBytes || memLimitBytes > maxMemLimitBytes) {
       throw VaultParameterFailure(
         'The vault asks for ${memLimitBytes ~/ (1024 * 1024)} MiB of '
         'key-derivation memory, which is outside the supported range of '

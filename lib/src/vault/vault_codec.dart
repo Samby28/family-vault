@@ -69,8 +69,7 @@ final class VaultCodec {
         key: key,
         associatedData: headerBytes,
       );
-      final Uint8List file =
-          Uint8List(headerBytes.length + ciphertext.length);
+      final Uint8List file = Uint8List(headerBytes.length + ciphertext.length);
       file.setRange(0, headerBytes.length, headerBytes);
       file.setRange(headerBytes.length, file.length, ciphertext);
       return file;

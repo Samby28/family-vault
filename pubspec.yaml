@@ -6,7 +6,10 @@ publish_to: "none"
 version: 0.1.0+1
 
 environment:
-  sdk: ">=3.4.0 <4.0.0"
+  # Raised from >=3.4.0 when sodium was added: the resolved lockfile reports a
+  # floor of 3.13.0, so the old constraint promised support this project does
+  # not have.
+  sdk: ">=3.13.0 <4.0.0"
 
 # Dependencies are added one per commit and confirmed green in CI before the
 # next, because this project is authored in an environment that cannot resolve
