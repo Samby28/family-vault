@@ -95,8 +95,17 @@ void main() {
       expect(Base32.isValid('MZXW6YTBOI'), isTrue);
     });
 
-    test('rejects a malformed key', () {
-      expect(Base32.isValid('not a key'), isFalse);
+    test('rejects a key containing a character outside the alphabet', () {
+      expect(Base32.isValid('MZXW6YTB!'), isFalse);
+      expect(Base32.isValid('hello world'), isFalse);
+    });
+
+    // Worth stating plainly: base32 carries no checksum, so a typo that
+    // happens to land inside the alphabet cannot be detected. "not a key"
+    // becomes NOTAKEY once spaces are stripped, and every one of those
+    // letters is valid base32, so it decodes. Nothing can catch that.
+    test('cannot detect a typo that is still valid base32', () {
+      expect(Base32.isValid('not a key'), isTrue);
     });
 
     test('rejects an empty key, since it produces no codes', () {

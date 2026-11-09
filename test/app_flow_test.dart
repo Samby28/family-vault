@@ -22,8 +22,23 @@ void main() {
 
   tearDown(() => session.dispose());
 
+  /// Starts the app in a window tall enough to show a whole screen.
+  ///
+  /// The default test window is 800x600, which is shorter than the setup
+  /// screen. Widgets below the fold are not hit-testable, so taps on them
+  /// silently do nothing - which is exactly how this suite first failed.
   Future<void> start(WidgetTester tester) async {
+    await tester.binding.setSurfaceSize(const Size(1100, 2000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(FamilyVaultApp(sessionOverride: session));
+    await tester.pumpAndSettle();
+  }
+
+  /// Scrolls [finder] into view, then taps it.
+  Future<void> tapVisible(WidgetTester tester, Finder finder) async {
+    await tester.ensureVisible(finder);
+    await tester.pumpAndSettle();
+    await tester.tap(finder);
     await tester.pumpAndSettle();
   }
 
@@ -33,10 +48,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField).at(1), password);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('I understand'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Create my vault'));
-    await tester.pumpAndSettle();
+    await tapVisible(tester, find.text('I understand'));
+    await tapVisible(tester, find.text('Create my vault'));
   }
 
   group('first run', () {
@@ -72,8 +85,7 @@ void main() {
       );
       expect(tester.widget<FilledButton>(button).onPressed, isNull);
 
-      await tester.tap(find.text('I understand'));
-      await tester.pumpAndSettle();
+      await tapVisible(tester, find.text('I understand'));
       expect(tester.widget<FilledButton>(button).onPressed, isNotNull);
     });
 
@@ -85,8 +97,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField).at(1), 'short');
       await tester.pumpAndSettle();
-      await tester.tap(find.text('I understand'));
-      await tester.pumpAndSettle();
+      await tapVisible(tester, find.text('I understand'));
 
       expect(
         tester
@@ -139,9 +150,6 @@ void main() {
     testWidgets('it appears in the list and survives a lock', (
       WidgetTester tester,
     ) async {
-      await tester.binding.setSurfaceSize(const Size(1200, 900));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
-
       await start(tester);
       await createVault(tester, 'the master password');
 
@@ -184,9 +192,6 @@ void main() {
     });
 
     testWidgets('a login with no name is refused', (WidgetTester tester) async {
-      await tester.binding.setSurfaceSize(const Size(1200, 900));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
-
       await start(tester);
       await createVault(tester, 'the master password');
 
@@ -204,9 +209,6 @@ void main() {
     testWidgets('a saved password is masked until revealed', (
       WidgetTester tester,
     ) async {
-      await tester.binding.setSurfaceSize(const Size(1200, 900));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
-
       await start(tester);
       await createVault(tester, 'the master password');
 
@@ -243,9 +245,6 @@ void main() {
     testWidgets('the lock button closes the vault and hides everything', (
       WidgetTester tester,
     ) async {
-      await tester.binding.setSurfaceSize(const Size(1200, 900));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
-
       await start(tester);
       await createVault(tester, 'the master password');
 
@@ -262,9 +261,6 @@ void main() {
     testWidgets('produces something and can be reached from the shell', (
       WidgetTester tester,
     ) async {
-      await tester.binding.setSurfaceSize(const Size(1200, 900));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
-
       await start(tester);
       await createVault(tester, 'the master password');
 

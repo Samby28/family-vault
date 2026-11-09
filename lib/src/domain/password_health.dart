@@ -315,27 +315,31 @@ abstract final class PasswordHealth {
     return true;
   }
 
-  /// True when the password runs straight up or down the character set, as
-  /// "123456" and "abcdef" do.
+  /// Longest run of consecutive characters that counts as a pattern.
+  ///
+  /// Five, not the whole password. An earlier version required the entire
+  /// password to be one unbroken run, which let "123456789012" through
+  /// because it wraps from 9 back to 0 - obviously guessable, and missed.
+  ///
+  /// Five is safe against false alarms: for a generated password to contain
+  /// five consecutive characters by chance is vanishingly unlikely, so this
+  /// does not punish good passwords.
+  static const int _sequenceRunLength = 5;
+
+  /// True when the password contains a straight run up or down the character
+  /// set, as "123456" and "abcdef" do.
   static bool _looksSequential(String password) {
-    if (password.length < 4) {
+    if (password.length < _sequenceRunLength) {
       return false;
     }
     int ascending = 1;
     int descending = 1;
     for (int i = 1; i < password.length; i++) {
       final int step = password.codeUnitAt(i) - password.codeUnitAt(i - 1);
-      if (step == 1) {
-        ascending++;
-      } else {
-        ascending = 1;
-      }
-      if (step == -1) {
-        descending++;
-      } else {
-        descending = 1;
-      }
-      if (ascending >= password.length || descending >= password.length) {
+      ascending = step == 1 ? ascending + 1 : 1;
+      descending = step == -1 ? descending + 1 : 1;
+      if (ascending >= _sequenceRunLength ||
+          descending >= _sequenceRunLength) {
         return true;
       }
     }
