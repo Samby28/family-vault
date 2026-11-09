@@ -20,7 +20,28 @@ void main() {
     session = VaultSession(crypto: FakeCryptoService(), repository: repository);
   });
 
-  tearDown(() => session.dispose());
+  /// Runs a test and then shuts everything down inside the test body.
+  ///
+  /// An unlocked vault holds a live auto-lock timer, and flutter_test fails a
+  /// test that finishes with a timer still pending. A `tearDown` is too late:
+  /// the check runs when the test body's fake-async zone completes, before
+  /// tearDowns do. So the tree is unmounted here, which disposes the widgets
+  /// and their timers, and then the session is disposed, which cancels the
+  /// lock timer.
+  void appTest(
+    String description,
+    Future<void> Function(WidgetTester tester) body,
+  ) {
+    testWidgets(description, (WidgetTester tester) async {
+      try {
+        await body(tester);
+      } finally {
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pumpAndSettle();
+        session.dispose();
+      }
+    });
+  }
 
   /// Starts the app in a window tall enough to show a whole screen.
   ///
@@ -53,13 +74,13 @@ void main() {
   }
 
   group('first run', () {
-    testWidgets('offers to create a vault', (WidgetTester tester) async {
+    appTest('offers to create a vault', (WidgetTester tester) async {
       await start(tester);
       expect(find.text('Set up Family Vault'), findsOneWidget);
       expect(find.text('Create my vault'), findsOneWidget);
     });
 
-    testWidgets('warns that a lost password cannot be recovered', (
+    appTest('warns that a lost password cannot be recovered', (
       WidgetTester tester,
     ) async {
       await start(tester);
@@ -70,7 +91,7 @@ void main() {
       );
     });
 
-    testWidgets('will not create a vault until the warning is acknowledged', (
+    appTest('will not create a vault until the warning is acknowledged', (
       WidgetTester tester,
     ) async {
       await start(tester);
@@ -89,7 +110,7 @@ void main() {
       expect(tester.widget<FilledButton>(button).onPressed, isNotNull);
     });
 
-    testWidgets('will not create a vault with a short password', (
+    appTest('will not create a vault with a short password', (
       WidgetTester tester,
     ) async {
       await start(tester);
@@ -109,7 +130,7 @@ void main() {
       );
     });
 
-    testWidgets('creating a vault opens it', (WidgetTester tester) async {
+    appTest('creating a vault opens it', (WidgetTester tester) async {
       await start(tester);
       await createVault(tester, 'a proper master password');
 
@@ -119,7 +140,7 @@ void main() {
   });
 
   group('once a vault exists', () {
-    testWidgets('asks for the password and opens on the right one', (
+    appTest('asks for the password and opens on the right one', (
       WidgetTester tester,
     ) async {
       await start(tester);
@@ -147,7 +168,7 @@ void main() {
   });
 
   group('saving a login through the interface', () {
-    testWidgets('it appears in the list and survives a lock', (
+    appTest('it appears in the list and survives a lock', (
       WidgetTester tester,
     ) async {
       await start(tester);
@@ -191,7 +212,7 @@ void main() {
       expect(session.data!.liveItems.single.title, 'My Bank');
     });
 
-    testWidgets('a login with no name is refused', (WidgetTester tester) async {
+    appTest('a login with no name is refused', (WidgetTester tester) async {
       await start(tester);
       await createVault(tester, 'the master password');
 
@@ -206,7 +227,7 @@ void main() {
   });
 
   group('secrets are not left on screen', () {
-    testWidgets('a saved password is masked until revealed', (
+    appTest('a saved password is masked until revealed', (
       WidgetTester tester,
     ) async {
       await start(tester);
@@ -242,7 +263,7 @@ void main() {
   });
 
   group('locking', () {
-    testWidgets('the lock button closes the vault and hides everything', (
+    appTest('the lock button closes the vault and hides everything', (
       WidgetTester tester,
     ) async {
       await start(tester);
@@ -258,7 +279,7 @@ void main() {
   });
 
   group('the generator', () {
-    testWidgets('produces something and can be reached from the shell', (
+    appTest('produces something and can be reached from the shell', (
       WidgetTester tester,
     ) async {
       await start(tester);
