@@ -9,6 +9,9 @@ analyzer:
     - build/**
     - "**/*.g.dart"
     - "**/*.freezed.dart"
+    - android/**
+    - web/**
+    - windows/**
 
 linter:
   rules:
