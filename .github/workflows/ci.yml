@@ -44,9 +44,19 @@ jobs:
       - name: Resolve dependencies
         run: flutter pub get
 
-      # Blocking: confirmed clean on the first run (CI 42609591764).
       - name: Check formatting
         run: dart format --output=none --set-exit-if-changed .
+
+      # The authoring environment has no Dart SDK, so it cannot run the
+      # formatter. When the check above fails, print the exact change the
+      # formatter wants so it can be applied verbatim rather than guessed at.
+      - name: Show required formatting
+        if: failure()
+        run: |
+          dart format .
+          echo "::group::Formatter diff"
+          git --no-pager diff
+          echo "::endgroup::"
 
       - name: Analyse
         run: flutter analyze
