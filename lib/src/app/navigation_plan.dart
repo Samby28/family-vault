@@ -45,12 +45,7 @@ enum AppSection {
   trash(Icons.delete_outline, Icons.delete, 'Trash'),
   settings(Icons.settings_outlined, Icons.settings, 'Settings');
 
-  const AppSection(
-    this.icon,
-    this.selectedIcon,
-    this.label, {
-    this.itemType,
-  });
+  const AppSection(this.icon, this.selectedIcon, this.label, {this.itemType});
 
   /// Icon when not selected.
   final IconData icon;

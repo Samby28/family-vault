@@ -17,10 +17,7 @@ void main() {
 
   setUp(() {
     repository = InMemoryVaultRepository();
-    session = VaultSession(
-      crypto: FakeCryptoService(),
-      repository: repository,
-    );
+    session = VaultSession(crypto: FakeCryptoService(), repository: repository);
   });
 
   tearDown(() {

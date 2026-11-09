@@ -52,9 +52,11 @@ abstract interface class VaultRepository {
 /// at no point is the real vault file partially written. If the process dies
 /// between steps 2 and 3, the backup still holds the last good vault.
 final class FileVaultRepository implements VaultRepository {
-  FileVaultRepository({required Directory directory, String fileName = 'vault.fvault'})
-    : _directory = directory,
-      _fileName = fileName;
+  FileVaultRepository({
+    required Directory directory,
+    String fileName = 'vault.fvault',
+  }) : _directory = directory,
+       _fileName = fileName;
 
   /// Uses the platform's private application-support directory.
   ///
@@ -71,7 +73,8 @@ final class FileVaultRepository implements VaultRepository {
   final Directory _directory;
   final String _fileName;
 
-  File get _file => File('${_directory.path}${Platform.pathSeparator}$_fileName');
+  File get _file =>
+      File('${_directory.path}${Platform.pathSeparator}$_fileName');
 
   File get _temporary =>
       File('${_directory.path}${Platform.pathSeparator}$_fileName.writing');

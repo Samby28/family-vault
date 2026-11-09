@@ -216,10 +216,7 @@ final class VaultCodec {
   /// Opens a vault file and returns only its payload, wiping the key.
   ///
   /// For reading a vault once, such as an import.
-  Uint8List open({
-    required Uint8List file,
-    required String masterPassword,
-  }) {
+  Uint8List open({required Uint8List file, required String masterPassword}) {
     final OpenedVault opened = unlock(
       file: file,
       masterPassword: masterPassword,

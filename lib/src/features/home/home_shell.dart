@@ -132,11 +132,7 @@ class _HomeShellState extends State<HomeShell> {
                   ),
                 ),
               if (wide) const VerticalDivider(width: 1),
-              Expanded(
-                child: SafeArea(
-                  child: _buildSection(data),
-                ),
-              ),
+              Expanded(child: SafeArea(child: _buildSection(data))),
             ],
           ),
           floatingActionButton: _showsAddButton
@@ -247,10 +243,7 @@ class _SectionList extends StatelessWidget {
         const Divider(),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          child: Text(
-            '$appName $appVersion',
-            style: theme.textTheme.bodySmall,
-          ),
+          child: Text('$appName $appVersion', style: theme.textTheme.bodySmall),
         ),
       ],
     );

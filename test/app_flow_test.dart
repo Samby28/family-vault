@@ -17,10 +17,7 @@ void main() {
 
   setUp(() {
     repository = InMemoryVaultRepository();
-    session = VaultSession(
-      crypto: FakeCryptoService(),
-      repository: repository,
-    );
+    session = VaultSession(crypto: FakeCryptoService(), repository: repository);
   });
 
   tearDown(() => session.dispose());
@@ -32,10 +29,7 @@ void main() {
 
   /// Creates a vault through the interface, as a first-time user would.
   Future<void> createVault(WidgetTester tester, String password) async {
-    await tester.enterText(
-      find.byType(TextField).first,
-      password,
-    );
+    await tester.enterText(find.byType(TextField).first, password);
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField).at(1), password);
     await tester.pumpAndSettle();
@@ -52,8 +46,9 @@ void main() {
       expect(find.text('Create my vault'), findsOneWidget);
     });
 
-    testWidgets('warns that a lost password cannot be recovered',
-        (WidgetTester tester) async {
+    testWidgets('warns that a lost password cannot be recovered', (
+      WidgetTester tester,
+    ) async {
       await start(tester);
       expect(
         find.textContaining('cannot be opened'),
@@ -62,15 +57,19 @@ void main() {
       );
     });
 
-    testWidgets('will not create a vault until the warning is acknowledged',
-        (WidgetTester tester) async {
+    testWidgets('will not create a vault until the warning is acknowledged', (
+      WidgetTester tester,
+    ) async {
       await start(tester);
       await tester.enterText(find.byType(TextField).first, 'a long password');
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField).at(1), 'a long password');
       await tester.pumpAndSettle();
 
-      final Finder button = find.widgetWithText(FilledButton, 'Create my vault');
+      final Finder button = find.widgetWithText(
+        FilledButton,
+        'Create my vault',
+      );
       expect(tester.widget<FilledButton>(button).onPressed, isNull);
 
       await tester.tap(find.text('I understand'));
@@ -78,8 +77,9 @@ void main() {
       expect(tester.widget<FilledButton>(button).onPressed, isNotNull);
     });
 
-    testWidgets('will not create a vault with a short password',
-        (WidgetTester tester) async {
+    testWidgets('will not create a vault with a short password', (
+      WidgetTester tester,
+    ) async {
       await start(tester);
       await tester.enterText(find.byType(TextField).first, 'short');
       await tester.pumpAndSettle();
@@ -108,8 +108,9 @@ void main() {
   });
 
   group('once a vault exists', () {
-    testWidgets('asks for the password and opens on the right one',
-        (WidgetTester tester) async {
+    testWidgets('asks for the password and opens on the right one', (
+      WidgetTester tester,
+    ) async {
       await start(tester);
       await createVault(tester, 'the master password');
       session.lock();
@@ -135,8 +136,9 @@ void main() {
   });
 
   group('saving a login through the interface', () {
-    testWidgets('it appears in the list and survives a lock',
-        (WidgetTester tester) async {
+    testWidgets('it appears in the list and survives a lock', (
+      WidgetTester tester,
+    ) async {
       await tester.binding.setSurfaceSize(const Size(1200, 900));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -199,8 +201,9 @@ void main() {
   });
 
   group('secrets are not left on screen', () {
-    testWidgets('a saved password is masked until revealed',
-        (WidgetTester tester) async {
+    testWidgets('a saved password is masked until revealed', (
+      WidgetTester tester,
+    ) async {
       await tester.binding.setSurfaceSize(const Size(1200, 900));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -237,8 +240,9 @@ void main() {
   });
 
   group('locking', () {
-    testWidgets('the lock button closes the vault and hides everything',
-        (WidgetTester tester) async {
+    testWidgets('the lock button closes the vault and hides everything', (
+      WidgetTester tester,
+    ) async {
       await tester.binding.setSurfaceSize(const Size(1200, 900));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -255,8 +259,9 @@ void main() {
   });
 
   group('the generator', () {
-    testWidgets('produces something and can be reached from the shell',
-        (WidgetTester tester) async {
+    testWidgets('produces something and can be reached from the shell', (
+      WidgetTester tester,
+    ) async {
       await tester.binding.setSurfaceSize(const Size(1200, 900));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 

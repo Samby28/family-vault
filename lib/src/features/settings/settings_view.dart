@@ -25,10 +25,8 @@ class SettingsView extends StatelessWidget {
     final TextEditingController confirm = TextEditingController();
     final bool? proceed = await showDialog<bool>(
       context: context,
-      builder: (BuildContext context) => _ChangePasswordDialog(
-        password: password,
-        confirm: confirm,
-      ),
+      builder: (BuildContext context) =>
+          _ChangePasswordDialog(password: password, confirm: confirm),
     );
     final String value = password.text;
     password.dispose();
@@ -167,9 +165,7 @@ class SettingsView extends StatelessWidget {
         Card(
           child: ListTile(
             title: const Text('Clear copied passwords'),
-            subtitle: Text(
-              _describeSeconds(settings.clipboardClearSeconds),
-            ),
+            subtitle: Text(_describeSeconds(settings.clipboardClearSeconds)),
             trailing: DropdownButton<int>(
               value: settings.clipboardClearSeconds,
               underline: const SizedBox.shrink(),
@@ -198,9 +194,7 @@ class SettingsView extends StatelessWidget {
           child: ListTile(
             leading: const Icon(Icons.key_outlined),
             title: const Text('Change master password'),
-            subtitle: const Text(
-              'Re-encrypts the whole vault with a new key',
-            ),
+            subtitle: const Text('Re-encrypts the whole vault with a new key'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _changePassword(context),
           ),
@@ -215,14 +209,12 @@ class SettingsView extends StatelessWidget {
               FutureBuilder<String>(
                 future: session.vaultLocation(),
                 builder:
-                    (
-                      BuildContext context,
-                      AsyncSnapshot<String> snapshot,
-                    ) => ListTile(
-                      leading: const Icon(Icons.folder_outlined),
-                      title: const Text('Where your vault is kept'),
-                      subtitle: Text(snapshot.data ?? 'Checking…'),
-                    ),
+                    (BuildContext context, AsyncSnapshot<String> snapshot) =>
+                        ListTile(
+                          leading: const Icon(Icons.folder_outlined),
+                          title: const Text('Where your vault is kept'),
+                          subtitle: Text(snapshot.data ?? 'Checking…'),
+                        ),
               ),
               const Divider(height: 1),
               ListTile(
@@ -274,10 +266,7 @@ class SettingsView extends StatelessWidget {
 
 /// Asks for a new master password, with the same strength guidance as setup.
 class _ChangePasswordDialog extends StatefulWidget {
-  const _ChangePasswordDialog({
-    required this.password,
-    required this.confirm,
-  });
+  const _ChangePasswordDialog({required this.password, required this.confirm});
 
   final TextEditingController password;
   final TextEditingController confirm;

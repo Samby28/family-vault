@@ -40,8 +40,7 @@ class _CreateVaultScreenState extends State<CreateVaultScreen> {
   bool get _longEnough =>
       _password.text.length >= MasterPasswordStrength.minimumLength;
 
-  bool get _canCreate =>
-      _matches && _longEnough && _understood && !_submitting;
+  bool get _canCreate => _matches && _longEnough && _understood && !_submitting;
 
   Future<void> _create() async {
     setState(() => _submitting = true);
@@ -74,9 +73,7 @@ class _CreateVaultScreenState extends State<CreateVaultScreen> {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final VaultSession session = SessionScope.of(context);
-    final PasswordStrength strength = MasterPasswordStrength.of(
-      _password.text,
-    );
+    final PasswordStrength strength = MasterPasswordStrength.of(_password.text);
     final String? advice = MasterPasswordStrength.adviceFor(_password.text);
 
     return Scaffold(
@@ -139,8 +136,7 @@ class _CreateVaultScreenState extends State<CreateVaultScreen> {
                     decoration: InputDecoration(
                       labelText: 'Type it again',
                       border: const OutlineInputBorder(),
-                      errorText:
-                          _confirm.text.isNotEmpty && !_matches
+                      errorText: _confirm.text.isNotEmpty && !_matches
                           ? 'These do not match'
                           : null,
                     ),

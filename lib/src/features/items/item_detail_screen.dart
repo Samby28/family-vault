@@ -178,8 +178,18 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
   static String _formatDate(DateTime when) {
     final DateTime local = when.toLocal();
     const List<String> months = <String>[
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${local.day} ${months[local.month - 1]} ${local.year}';
   }
@@ -365,9 +375,9 @@ class _AuthenticatorCardState extends State<_AuthenticatorCard> {
                 final VaultSession session = SessionScope.read(context);
                 await session.copyToClipboard(code);
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Code copied.')),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(const SnackBar(content: Text('Code copied.')));
                 }
               },
             ),

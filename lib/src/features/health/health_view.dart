@@ -145,10 +145,7 @@ class _IssueCard extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
-                  Text(
-                    issue.severity.label,
-                    style: theme.textTheme.labelSmall,
-                  ),
+                  Text(issue.severity.label, style: theme.textTheme.labelSmall),
                 ],
               ),
               const SizedBox(height: 8),

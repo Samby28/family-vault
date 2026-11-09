@@ -184,8 +184,8 @@ class VaultSession extends ChangeNotifier with WidgetsBindingObserver {
   // ---------------------------------------------------------------- contents
 
   /// Adds or replaces an item and saves.
-  Future<bool> saveItem(VaultItem item) => _mutate((VaultData d) =>
-      d.upsertItem(item));
+  Future<bool> saveItem(VaultItem item) =>
+      _mutate((VaultData d) => d.upsertItem(item));
 
   /// Moves an item to the trash and saves.
   Future<bool> trashItem(String id) =>

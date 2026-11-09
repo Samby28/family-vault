@@ -25,10 +25,7 @@ class FoldersView extends StatelessWidget {
     'Travel',
   ];
 
-  Future<void> _promptForName(
-    BuildContext context, {
-    Folder? existing,
-  }) async {
+  Future<void> _promptForName(BuildContext context, {Folder? existing}) async {
     final TextEditingController controller = TextEditingController(
       text: existing?.name ?? '',
     );
@@ -53,8 +50,7 @@ class FoldersView extends StatelessWidget {
             child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () =>
-                Navigator.of(context).pop(controller.text.trim()),
+            onPressed: () => Navigator.of(context).pop(controller.text.trim()),
             child: Text(existing == null ? 'Create' : 'Rename'),
           ),
         ],
@@ -176,17 +172,16 @@ class FoldersView extends StatelessWidget {
                     );
                   }
                 },
-                itemBuilder: (BuildContext context) =>
-                    <PopupMenuEntry<String>>[
-                      const PopupMenuItem<String>(
-                        value: 'rename',
-                        child: Text('Rename'),
-                      ),
-                      const PopupMenuItem<String>(
-                        value: 'delete',
-                        child: Text('Delete'),
-                      ),
-                    ],
+                itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                  const PopupMenuItem<String>(
+                    value: 'rename',
+                    child: Text('Rename'),
+                  ),
+                  const PopupMenuItem<String>(
+                    value: 'delete',
+                    child: Text('Delete'),
+                  ),
+                ],
               ),
             ),
           ),

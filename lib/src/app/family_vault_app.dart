@@ -94,10 +94,7 @@ class _FamilyVaultAppState extends State<FamilyVaultApp> {
     if (session == null) {
       return const _Starting();
     }
-    return SessionScope(
-      session: session,
-      child: const _SessionRouter(),
-    );
+    return SessionScope(session: session, child: const _SessionRouter());
   }
 }
 
@@ -122,9 +119,7 @@ class _Starting extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: CircularProgressIndicator()),
-    );
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }
 }
 
@@ -165,10 +160,7 @@ class _StartupFailure extends StatelessWidget {
                   style: theme.textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 16),
-                SelectableText(
-                  detail,
-                  style: theme.textTheme.bodySmall,
-                ),
+                SelectableText(detail, style: theme.textTheme.bodySmall),
               ],
             ),
           ),

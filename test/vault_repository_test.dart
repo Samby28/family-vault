@@ -37,12 +37,15 @@ void main() {
       expect(await repository.exists(), isFalse);
     });
 
-    test('refuses to read what is not there, with a readable message', () async {
-      await expectLater(
-        repository.read(),
-        throwsA(isA<VaultFormatFailure>()),
-      );
-    });
+    test(
+      'refuses to read what is not there, with a readable message',
+      () async {
+        await expectLater(
+          repository.read(),
+          throwsA(isA<VaultFormatFailure>()),
+        );
+      },
+    );
 
     test('has no backup', () async {
       expect(await repository.hasBackup(), isFalse);
@@ -128,17 +131,24 @@ void main() {
       expect(fileIn('vault.fvault.writing').existsSync(), isFalse);
     });
 
-    test('the vault is readable at every point across repeated writes', () async {
-      await repository.write(bytesOf(0x01));
-      for (int i = 2; i <= 10; i++) {
-        await repository.write(bytesOf(i));
-        // After every single write the file must be complete and current,
-        // never a partial mixture of old and new.
-        final Uint8List read = await repository.read();
-        expect(read.length, 64);
-        expect(read.every((int b) => b == i), isTrue, reason: 'after write $i');
-      }
-    });
+    test(
+      'the vault is readable at every point across repeated writes',
+      () async {
+        await repository.write(bytesOf(0x01));
+        for (int i = 2; i <= 10; i++) {
+          await repository.write(bytesOf(i));
+          // After every single write the file must be complete and current,
+          // never a partial mixture of old and new.
+          final Uint8List read = await repository.read();
+          expect(read.length, 64);
+          expect(
+            read.every((int b) => b == i),
+            isTrue,
+            reason: 'after write $i',
+          );
+        }
+      },
+    );
   });
 
   group('deleting', () {

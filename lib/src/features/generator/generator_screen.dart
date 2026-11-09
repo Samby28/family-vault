@@ -93,14 +93,13 @@ class _GeneratorScreenState extends State<GeneratorScreen> {
                         onPressed: _value.isEmpty
                             ? null
                             : () async {
-                                final VaultSession session =
-                                    SessionScope.read(context);
+                                final VaultSession session = SessionScope.read(
+                                  context,
+                                );
                                 await session.copyToClipboard(_value);
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Copied.'),
-                                    ),
+                                    const SnackBar(content: Text('Copied.')),
                                   );
                                 }
                               },
@@ -185,10 +184,7 @@ class _GeneratorScreenState extends State<GeneratorScreen> {
   ];
 
   List<Widget> _passphraseOptions(ThemeData theme) => <Widget>[
-    Text(
-      'Words: ${_passphrase.wordCount}',
-      style: theme.textTheme.labelLarge,
-    ),
+    Text('Words: ${_passphrase.wordCount}', style: theme.textTheme.labelLarge),
     Slider(
       value: _passphrase.wordCount.toDouble(),
       min: PassphraseRecipe.minWords.toDouble(),

@@ -235,9 +235,7 @@ class _ItemEditorScreenState extends State<ItemEditorScreen> {
                 border: OutlineInputBorder(),
               ),
               items: <DropdownMenuItem<String?>>[
-                const DropdownMenuItem<String?>(
-                  child: Text('No folder'),
-                ),
+                const DropdownMenuItem<String?>(child: Text('No folder')),
                 for (final Folder folder in data.folders)
                   DropdownMenuItem<String?>(
                     value: folder.id,
