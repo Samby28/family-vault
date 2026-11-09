@@ -15,10 +15,125 @@ tests covering it pass in CI. A screen that renders is not a completed feature.
 |---|---|---|
 | 1 | Flutter scaffold and GitHub Actions build pipeline | **COMPLETED** — green on all jobs, run 42612638343 |
 | 2 | Cryptographic core: Argon2id, authenticated encryption, vault format, tests | **COMPLETED** — green on all jobs, run 42625696754 |
-| 3 | Vault interface: folders, logins, notes, cards, identities, generator, search, lock screen, trash | NOT STARTED |
-| 4 | TOTP authenticator and password-health reporting | NOT STARTED |
+| 3 | Vault interface: folders, logins, notes, cards, identities, generator, search, lock screen, trash | **COMPLETED** — v0.3.0, run 42652258834 |
+| 4 | TOTP authenticator and password-health reporting | **COMPLETED** — RFC vectors asserted |
 | 5 | Android autofill integration | NOT STARTED |
 | 6 | Encrypted cloud-drive synchronisation and Phase 2 integrations | NOT STARTED |
+
+---
+
+## 2026-11-09 — Stages 3 and 4: a working password manager, v0.3.0
+
+**Status: COMPLETED.** CI run `42652258834` green on all three jobs.
+**264 tests pass**, up from 91. Released as
+[v0.3.0](https://github.com/Samby28/family-vault/releases/tag/v0.3.0) with both
+installers. This is the first version that holds a real password.
+
+### Evidence
+
+| Check | Result |
+|---|---|
+| `dart format`, `flutter analyze` | PASS, both blocking |
+| `flutter test` | **264 of 264 passed** |
+| RFC 6238 / RFC 4226 vectors | **Asserted**, SHA-1, SHA-256 and SHA-512, all ten HOTP counters |
+| RFC 4648 base32 vectors | **Asserted** |
+| Android APK | **Built, 53.8 MB**, published |
+| Windows application | **Built**, published |
+| Argon2id, 64 MiB / 2 passes | seal 64 ms, open 68 ms on CI hardware |
+
+### What a user can now do
+
+Create a vault; save logins, secure notes, payment cards and identities;
+organise them in folders; search; generate passwords, passphrases and
+usernames; hold two-factor codes for other accounts with a live countdown; see
+a password-health score with specific advice; restore from trash; change the
+master password; lock by hand, on a timer, or when the app leaves the screen.
+
+### Two real bugs the tests caught before the owner could
+
+**Tapping Add would have crashed the app.** `SessionScope` was passed as
+MaterialApp's `home`, but MaterialApp builds the Navigator, so a route pushed
+onto it is a sibling of `home` rather than a descendant. Every pushed screen —
+the item editor and the generator — could not find the session and threw while
+building. Found only because the widget tests drive the real screens rather
+than asserting that they render.
+
+**The health check missed an obviously guessable password.** The sequence
+detector required the whole password to be one unbroken run, so
+`123456789012` passed because it wraps from 9 back to 0. It now flags a run of
+five or more anywhere in the password.
+
+### Test failures, and what each turned out to be
+
+Nine runs. Worth separating the ones that found product bugs from the ones that
+found mistakes in the tests, because the ratio is the point of writing them.
+
+| Cause | Where the fault was |
+|---|---|
+| `SessionScope` below the Navigator | **Product** |
+| Sequence check required a whole-password run | **Product** |
+| `WidgetsBindingObserver` imported from `foundation.dart` instead of `widgets.dart` | **Product** (would not compile) |
+| Private field as a named initializing formal — not legal Dart | **Product** |
+| `isValid('not a key')` asserted false, but NOTAKEY is valid base32 | Test — the code was right |
+| Taps on widgets below the fold in an 800×600 window did nothing | Test |
+| Surface size set without the pixel ratio, leaving ~367 logical px | Test |
+| Auto-lock timer still pending when the test ended | Test harness |
+| Looked for an entry name on the dashboard, which shows counts only | Test |
+
+Four product faults, five test faults. The two in bold would both have reached
+the owner's phone.
+
+### Decisions taken during this stage
+
+**One item class, not four.** Common fields are typed; the parts that differ by
+kind live in a map keyed by constants, and each `VaultItemType` carries its own
+field list with labels and input kinds. One form renders all four kinds, and a
+fifth kind needs no new screen. That is what "extensible to future item types"
+comes to in practice.
+
+**Saving never keeps the master password.** The password is used once to derive
+a key; that key then lives in libsodium's locked memory, which can be wiped. A
+Dart `String` cannot be wiped, so holding the password would leave it on the
+heap for the life of the process. Saving re-seals with the held key.
+
+**Writing is three steps.** Write to a temporary file and flush, move the
+existing vault aside as a backup, then rename the temporary file into place. A
+rename within a directory is atomic, so the real file is never half-written,
+and a crash mid-save leaves the backup intact. Tested by checking the vault is
+complete and current after each of ten successive writes.
+
+**A failed write does not change what the interface shows.** Telling someone
+their password was saved when it was not would be the worst available failure.
+
+**No state-management package**, as decision D-005 anticipated: Flutter's own
+`InheritedNotifier` carries the single piece of shared state here.
+
+### The published APK was inspected, not taken on trust
+
+| Check | Result |
+|---|---|
+| Archive integrity | PASS, no errors in compressed data |
+| Recognised as an Android package | PASS |
+| Native libraries | `arm64-v8a`, `armeabi-v7a`, `x86_64` |
+| **libsodium bundled** | **Yes** — `libsodium.so` present in all three architectures, so the cryptography really ships with the app |
+| Compiled Dart and Flutter engine | `libapp.so` and `libflutter.so` in all three |
+| Signature | APK Signing Block present, consistent with the debug-key signing of decision D-006 |
+| Size | 51.3 MB |
+
+### Not yet verified
+
+| Not verified | Resolved by |
+|---|---|
+| Argon2id timing on a real phone | 64 ms on CI says little about a mid-range Android; measuring on the owner's device |
+| Daily use with real entries | The owner using it |
+
+### Known gaps, stated rather than glossed
+
+No syncing, so each device holds a separate vault and losing the device loses
+the vault. No Android autofill, no CSV import, no biometric unlock, no
+screenshot blocking, no hardware-backed device key, no recovery sheet. Encrypted
+export exists in the session but has no screen. All of it is in
+`docs/known-limitations.md` and in the app's own settings screen.
 
 ---
 
