@@ -75,6 +75,44 @@ deployment is the one remaining place it appears, and it now does that.
 - **Flutter pinned** to 3.47.9 so builds stay reproducible and the toolchain is
   raised deliberately rather than drifting with the stable channel.
 
+### Release v0.1.0 published
+
+Release workflow run `42613649843`, all three jobs green:
+<https://github.com/Samby28/family-vault/releases/tag/v0.1.0>
+
+| Asset | Size |
+|---|---|
+| `FamilyVault-Android.apk` | 43.7 MB |
+| `FamilyVault-Windows.zip` | 10.8 MB |
+
+The published APK was downloaded and inspected rather than taken on trust:
+
+| Check | Result |
+|---|---|
+| Archive integrity | PASS, no errors in compressed data |
+| Recognised as an Android package | PASS |
+| Native libraries | `arm64-v8a`, `armeabi-v7a`, `x86_64` — covers current phones |
+| Compiled Dart | `libapp.so` present in all three architectures |
+| Flutter engine | `libflutter.so` present in all three |
+| Bundled assets | `flutter_assets` present |
+| Signature | APK Signing Block present (v2/v3 scheme), consistent with the debug-key signing recorded in decision D-006 |
+
+A note on how the tag was created: `git push origin v0.1.0` failed twice with
+`send-pack: unexpected disconnect`, which appears to be a limit of this
+session's git proxy on annotated tag objects rather than anything about the
+repository — branch pushes succeeded throughout. The release was therefore
+created by dispatching the release workflow with its `tag` input, which the
+workflow already supported. The outcome is identical; it is recorded here so
+the absence of a locally pushed tag object is not a mystery later.
+
+### Secret scan of the public repository
+
+| Check | Result |
+|---|---|
+| Tracked files with vault, keystore, key or env extensions | **None** |
+| Hard-coded passwords, private keys or API keys in source | **None** |
+| Tracked files total | 66 |
+
 ### Blocked
 
 **Open question 2 — GitHub Pages is not enabled**, so the web demonstration has

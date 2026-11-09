@@ -190,7 +190,7 @@ These override convenience at every decision point.
 | B12.3 | Automated Android APK build on every relevant push | BR, MP 13 | COMPLETED |
 | B12.4 | Automated Windows build | BR, MP 13 | COMPLETED |
 | B12.5 | Build artifacts published | BR, MP 13 | COMPLETED |
-| B12.6 | GitHub Releases for installable versions | BR, MP 13 | TESTING (workflow written; first tag publishing now) |
+| B12.6 | GitHub Releases for installable versions | BR, MP 13 | COMPLETED (v0.1.0 published with both installers) |
 | B12.7 | Analyzer and automated tests run in CI, blocking on failure | MP 16 | COMPLETED (format, analyse and test all blocking) |
 | B12.8 | Build failures diagnosed from logs and fixed, never hidden or misreported | MP 17 | COMPLETED (three failures diagnosed and fixed; see progress log) |
 | B12.9 | Public web demonstration on a shareable URL, dummy data only, labelled as a demo | BR, MP 14, FI 3 | BLOCKED (builds and is downloadable; live URL needs Pages enabled by owner) |
