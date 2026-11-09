@@ -255,8 +255,11 @@ void main() {
       await tester.tap(find.text('Save'));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('My Bank'));
-      await tester.pumpAndSettle();
+      // Saving returns to whichever section the Add button was pressed from,
+      // which here is the dashboard - and the dashboard deliberately shows
+      // counts only, never entry names. So go to the list to open the entry.
+      await tapVisible(tester, find.text('All Items'));
+      await tapVisible(tester, find.text('My Bank'));
 
       expect(
         find.text('TopSecret-99-Password'),
