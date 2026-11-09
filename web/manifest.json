@@ -1,6 +1,6 @@
 {
-    "name": "family_vault",
-    "short_name": "family_vault",
+    "name": "Family Vault - Demonstration",
+    "short_name": "Family Vault",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

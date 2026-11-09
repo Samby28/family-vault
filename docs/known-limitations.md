@@ -90,13 +90,12 @@ family member, at the cost of a larger download than a per-architecture build.
 Distribution is a zip folder that is unzipped and run. A proper MSIX or
 Installer package is Phase 2 work.
 
-### Platform projects are generated on first build
+### The app identifier keeps Flutter's generated form
 
-The `android/`, `windows/` and `web/` directories are produced by
-`tool/bootstrap_platforms.sh` from Flutter's own templates, because the authoring
-environment cannot run `flutter create`. Once generated, they are committed, and
-the script becomes a no-op. A reviewer cloning the repository before that commit
-must run the script once. See decision D-004.
+The Android `applicationId` is `com.casamby.family_vault`. It is deliberately
+left as generated: an application identifier is a permanent identity, and
+changing it later would make an installed app unable to upgrade in place. Only
+the names a user actually reads were changed.
 
 ### The Flutter version is pinned to one release
 

@@ -122,9 +122,6 @@ stable channel, and JDK 17 for Android.
 git clone https://github.com/Samby28/family-vault.git
 cd family-vault
 
-# Generates the android/, windows/ and web/ projects if they are absent.
-bash tool/bootstrap_platforms.sh
-
 flutter pub get
 flutter analyze
 flutter test
@@ -143,6 +140,9 @@ first compilation, which shapes two things:
   readable analyser output rather than build crashes.
 - Dependencies are added one per commit and confirmed green before the next.
   Stage 1 therefore has **no third-party runtime dependencies at all**.
+
+Builds are pinned to Flutter **3.47.9**, the version Stage 1 is verified
+against.
 
 | Workflow | Does |
 |---|---|
