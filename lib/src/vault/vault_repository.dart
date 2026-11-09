@@ -53,10 +53,9 @@ abstract interface class VaultRepository {
 /// between steps 2 and 3, the backup still holds the last good vault.
 final class FileVaultRepository implements VaultRepository {
   FileVaultRepository({
-    required Directory directory,
-    String fileName = 'vault.fvault',
-  }) : _directory = directory,
-       _fileName = fileName;
+    required this.directory,
+    this.fileName = 'vault.fvault',
+  });
 
   /// Uses the platform's private application-support directory.
   ///
@@ -70,17 +69,20 @@ final class FileVaultRepository implements VaultRepository {
     return FileVaultRepository(directory: directory);
   }
 
-  final Directory _directory;
-  final String _fileName;
+  /// Directory the vault lives in.
+  final Directory directory;
+
+  /// Name of the vault file inside [directory].
+  final String fileName;
 
   File get _file =>
-      File('${_directory.path}${Platform.pathSeparator}$_fileName');
+      File('${directory.path}${Platform.pathSeparator}$fileName');
 
   File get _temporary =>
-      File('${_directory.path}${Platform.pathSeparator}$_fileName.writing');
+      File('${directory.path}${Platform.pathSeparator}$fileName.writing');
 
   File get _backup =>
-      File('${_directory.path}${Platform.pathSeparator}$_fileName.previous');
+      File('${directory.path}${Platform.pathSeparator}$fileName.previous');
 
   @override
   Future<bool> exists() => _file.exists();
@@ -101,8 +103,8 @@ final class FileVaultRepository implements VaultRepository {
 
   @override
   Future<void> write(Uint8List bytes) async {
-    if (!_directory.existsSync()) {
-      await _directory.create(recursive: true);
+    if (!directory.existsSync()) {
+      await directory.create(recursive: true);
     }
 
     // Step 1: write and flush, so the bytes are really on disk before

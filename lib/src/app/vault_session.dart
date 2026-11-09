@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 
 import '../core/failures.dart';
 import '../crypto/crypto_service.dart';
@@ -41,12 +41,14 @@ enum VaultStatus {
 class VaultSession extends ChangeNotifier with WidgetsBindingObserver {
   VaultSession({
     required CryptoService crypto,
-    required VaultRepository repository,
-  }) : _codec = VaultCodec(crypto),
-       _repository = repository;
+    required this.repository,
+  }) : _codec = VaultCodec(crypto);
 
   final VaultCodec _codec;
-  final VaultRepository _repository;
+
+  /// Where the vault is stored. Public because a private field cannot be a
+  /// named initializing formal in Dart.
+  final VaultRepository repository;
 
   VaultStatus _status = VaultStatus.starting;
   VaultData? _data;
@@ -85,21 +87,21 @@ class VaultSession extends ChangeNotifier with WidgetsBindingObserver {
   /// Works out whether a vault exists. Call once at startup.
   Future<void> initialise() async {
     WidgetsBinding.instance.addObserver(this);
-    _status = await _repository.exists()
+    _status = await repository.exists()
         ? VaultStatus.locked
         : VaultStatus.absent;
     notifyListeners();
   }
 
   /// Where the vault file is, for display in settings.
-  Future<String> vaultLocation() => _repository.location();
+  Future<String> vaultLocation() => repository.location();
 
   /// Creates a new vault protected by [masterPassword].
   ///
   /// Returns true on success. Refuses if a vault already exists, so an
   /// accidental second creation cannot overwrite a real one.
   Future<bool> createVault(String masterPassword) async {
-    if (await _repository.exists()) {
+    if (await repository.exists()) {
       _fail('A vault already exists on this device.');
       return false;
     }
@@ -108,7 +110,7 @@ class VaultSession extends ChangeNotifier with WidgetsBindingObserver {
         masterPassword: masterPassword,
       );
       const VaultData fresh = VaultData.empty;
-      await _repository.write(
+      await repository.write(
         _codec.sealWith(keyring: keyring, payload: fresh.encode()),
       );
       _keyring = keyring;
@@ -122,7 +124,7 @@ class VaultSession extends ChangeNotifier with WidgetsBindingObserver {
 
   /// Opens the vault with [masterPassword]. Returns true on success.
   Future<bool> unlock(String masterPassword) => _guard(() async {
-    final Uint8List file = await _repository.read();
+    final Uint8List file = await repository.read();
     final OpenedVault opened = _codec.unlock(
       file: file,
       masterPassword: masterPassword,
@@ -173,7 +175,7 @@ class VaultSession extends ChangeNotifier with WidgetsBindingObserver {
   /// The interface asks for confirmation before calling this; there is no way
   /// back from it.
   Future<bool> deleteVault() => _guard(() async {
-    await _repository.delete();
+    await repository.delete();
     _keyring?.dispose();
     _keyring = null;
     _data = null;
@@ -247,7 +249,7 @@ class VaultSession extends ChangeNotifier with WidgetsBindingObserver {
       final VaultKeyring replacement = _codec.createKeyring(
         masterPassword: newPassword,
       );
-      await _repository.write(
+      await repository.write(
         _codec.sealWith(keyring: replacement, payload: current.encode()),
       );
       _keyring?.dispose();
@@ -344,7 +346,7 @@ class VaultSession extends ChangeNotifier with WidgetsBindingObserver {
     }
     return _guard(() async {
       final VaultData next = change(current);
-      await _repository.write(
+      await repository.write(
         _codec.sealWith(keyring: keyring, payload: next.encode()),
       );
       _data = next;
