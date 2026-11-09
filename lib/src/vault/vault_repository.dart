@@ -75,8 +75,7 @@ final class FileVaultRepository implements VaultRepository {
   /// Name of the vault file inside [directory].
   final String fileName;
 
-  File get _file =>
-      File('${directory.path}${Platform.pathSeparator}$fileName');
+  File get _file => File('${directory.path}${Platform.pathSeparator}$fileName');
 
   File get _temporary =>
       File('${directory.path}${Platform.pathSeparator}$fileName.writing');

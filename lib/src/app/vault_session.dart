@@ -39,10 +39,8 @@ enum VaultStatus {
 /// so keeping the password around would leave it on the heap for as long as
 /// the process ran.
 class VaultSession extends ChangeNotifier with WidgetsBindingObserver {
-  VaultSession({
-    required CryptoService crypto,
-    required this.repository,
-  }) : _codec = VaultCodec(crypto);
+  VaultSession({required CryptoService crypto, required this.repository})
+    : _codec = VaultCodec(crypto);
 
   final VaultCodec _codec;
 
