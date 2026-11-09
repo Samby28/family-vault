@@ -1,22 +1,24 @@
 name: Crypto library probe
 
-# Temporary, manually triggered. Settles decision D-003 with evidence.
+# Temporary, manually triggered. Final probe before the cryptographic core is
+# written. Removed once decision D-003 is recorded.
 #
-# Probe 1 (run 42618366937) established that:
-#   - sodium 4.1.2+1 and sodium_libs 4.0.1 resolve
-#   - an Android APK and a Windows application both still build with them
-#   - libsodium 1.0.18 installs on the Linux runner as libsodium.so.23
-#   - Crypto exposes aeadXChaCha20Poly1305IETF
-#   - there is NO lib/src/api/pwhash.dart, so Argon2id is not in the base API;
-#     it belongs to the "sumo" variant
+# Settled so far:
+#   Probe 1 (42618366937) - sodium 4.1.2+1 resolves; APK and Windows both build
+#     with libsodium added; libsodium 1.0.18 installs on the Linux runner.
+#   Probe 2 (42619562544) - Argon2id lives in the sumo variant, reached through
+#     package:sodium/sodium_sumo.dart; SodiumSumoInit.init() is synchronous and
+#     uses a bundled libsodium, so no dynamic-library loader is needed;
+#     Aead.encrypt/decrypt accept additionalData, which is what lets the vault
+#     header be authenticated; and sodium_libs is DEPRECATED, with everything
+#     moved into sodium itself.
 #
-# Probe 2 answers what remains before the core can be written: where Pwhash
-# lives, whether sodium_libs can supply a sumo build for Android and Windows,
-# and the exact signatures of the methods this project will call. Printing the
-# files whole rather than grepping them, because probe 1's grep matched only
-# getters and missed every method.
-#
-# Removed once D-003 is recorded.
+# This probe answers the last two questions:
+#   1. The CryptoPwhashAlgorithm values, so Argon2id can be selected explicitly
+#      rather than left to a default. A password manager must not infer which
+#      KDF it is using.
+#   2. Whether sodium alone, without the deprecated sodium_libs, still builds
+#      on both platforms.
 
 on:
   workflow_dispatch:
@@ -26,83 +28,77 @@ permissions:
 
 jobs:
   inspect:
-    name: Locate Pwhash and print exact signatures
+    name: Print the remaining interfaces
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
           flutter-version: 3.47.9
           cache: true
 
-      - name: Add candidates, including the sumo variant if one exists
+      - name: Add sodium only
         run: |
-          flutter pub add sodium sodium_libs
-          echo "::group::Is there a separate sumo package?"
-          flutter pub add sodium_libs_sumo 2>&1 | tail -5 || \
-            echo "NO sodium_libs_sumo package (or it failed to resolve)"
-          echo "::endgroup::"
-          echo "::group::pubspec dependencies"
+          flutter pub add sodium
+          echo "::group::dependencies"
           sed -n '/^dependencies:/,/^dev_dependencies:/p' pubspec.yaml
           echo "::endgroup::"
 
-      - name: Where does Pwhash live?
-        run: |
-          CACHE="${PUB_CACHE:-$HOME/.pub-cache}"
-          echo "::group::Files mentioning pwhash across all sodium packages"
-          grep -rl -i "pwhash" "$CACHE"/hosted/pub.dev/sodium*/lib 2>/dev/null \
-            | sed "s|$CACHE/hosted/pub.dev/||" | sort
-          echo "::endgroup::"
-          echo "::group::Sumo entry points"
-          find "$CACHE"/hosted/pub.dev/sodium*/lib -iname "*sumo*" 2>/dev/null \
-            | sed "s|$CACHE/hosted/pub.dev/||" | sort
-          echo "::endgroup::"
-          echo "::group::sodium_libs package contents"
-          find "$CACHE"/hosted/pub.dev/sodium_libs-*/lib -name "*.dart" 2>/dev/null \
-            | sed "s|$CACHE/hosted/pub.dev/||" | sort
-          echo "::endgroup::"
-
-      - name: Print the files this project will be written against
+      - name: Print the interfaces whole
         run: |
           CACHE="${PUB_CACHE:-$HOME/.pub-cache}"
           ROOT=$(find "$CACHE"/hosted/pub.dev -maxdepth 1 -type d -name "sodium-*" | head -1)
-
-          show() {
-            if [ -f "$1" ]; then
-              echo "::group::FILE $(echo "$1" | sed "s|$CACHE/hosted/pub.dev/||")"
-              cat -n "$1"
+          for rel in \
+            lib/src/api/sumo/pwhash.dart \
+            lib/src/api/secure_key.dart \
+            lib/src/api/randombytes.dart \
+            lib/src/api/sodium.dart \
+            lib/src/api/sodium_exception.dart
+          do
+            f="$ROOT/$rel"
+            if [ -f "$f" ]; then
+              echo "::group::FILE $rel"
+              cat "$f"
               echo "::endgroup::"
             else
-              echo "MISSING: $1"
+              echo "MISSING: $rel"
             fi
-          }
-
-          # The AEAD interface: encrypt, decrypt, and their detached forms.
-          show "$ROOT/lib/src/api/aead.dart"
-          # The sumo entry point, which should expose Pwhash.
-          show "$ROOT/lib/sodium_sumo.dart"
-          # Whatever file actually declares Pwhash.
-          for f in $(grep -rl "abstract class Pwhash\|class Pwhash" "$ROOT/lib" 2>/dev/null); do
-            show "$f"
           done
-          # Key material handling and the random source.
-          show "$ROOT/lib/src/api/secure_key.dart"
-          show "$ROOT/lib/src/api/randombytes.dart"
 
-      - name: Print the sumo crypto surface and the init entry points
+  build-android:
+    name: APK with sodium alone
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.9
+          cache: true
+      - run: flutter pub add sodium
+      - run: flutter build apk --release
+      - run: ls -lh build/app/outputs/flutter-apk/
+
+  build-windows:
+    name: Windows with sodium alone
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.9
+          cache: true
+      - run: flutter pub add sodium
+      - run: flutter build windows --release
+      - shell: pwsh
         run: |
-          CACHE="${PUB_CACHE:-$HOME/.pub-cache}"
-          ROOT=$(find "$CACHE"/hosted/pub.dev -maxdepth 1 -type d -name "sodium-*" | head -1)
-          LIBS=$(find "$CACHE"/hosted/pub.dev -maxdepth 1 -type d -name "sodium_libs-*" | head -1)
-          for f in $(find "$ROOT/lib" -iname "*sumo*" -name "*.dart" 2>/dev/null | head -8); do
-            echo "::group::FILE $(echo "$f" | sed "s|$CACHE/hosted/pub.dev/||")"
-            cat -n "$f" | head -120
-            echo "::endgroup::"
-          done
-          for f in $(find "$LIBS/lib" -name "*.dart" 2>/dev/null | head -10); do
-            echo "::group::FILE $(echo "$f" | sed "s|$CACHE/hosted/pub.dev/||")"
-            cat -n "$f" | head -120
-            echo "::endgroup::"
-          done
+          $dir = "build/windows/x64/runner/Release"
+          if (-not (Test-Path $dir)) { $dir = "build/windows/runner/Release" }
+          Get-ChildItem $dir -Recurse -Include *.dll,*.exe |
+            Select-Object Name, Length
