@@ -29,7 +29,8 @@ void main() {
       expect(find.text(appStage), findsWidgets);
     });
 
-    testWidgets('about dialog reports the version', (WidgetTester tester) async {
+    testWidgets('about dialog reports the version',
+        (WidgetTester tester) async {
       await tester.pumpWidget(const FamilyVaultApp());
 
       await tester.tap(find.byIcon(Icons.info_outline));
