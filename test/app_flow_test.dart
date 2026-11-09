@@ -49,8 +49,14 @@ void main() {
   /// screen. Widgets below the fold are not hit-testable, so taps on them
   /// silently do nothing - which is exactly how this suite first failed.
   Future<void> start(WidgetTester tester) async {
-    await tester.binding.setSurfaceSize(const Size(1100, 2000));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
+    // Set the physical size AND the pixel ratio. The default test view is
+    // 800x600 at a device pixel ratio of 3, so setting the surface size alone
+    // left the logical width around 367 - narrow enough that the shell chose
+    // its phone layout, where the section list lives in a closed drawer and
+    // is therefore not in the tree at all.
+    tester.view.physicalSize = const Size(1400, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
     await tester.pumpWidget(FamilyVaultApp(sessionOverride: session));
     await tester.pumpAndSettle();
   }
@@ -135,7 +141,9 @@ void main() {
       await createVault(tester, 'a proper master password');
 
       expect(session.status, VaultStatus.unlocked);
-      expect(find.text('Dashboard'), findsWidgets);
+      // Dashboard content, which both layouts show, rather than a sidebar
+      // label that only the wide layout builds.
+      expect(find.text('Your vault'), findsOneWidget);
     });
   });
 

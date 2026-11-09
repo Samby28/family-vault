@@ -75,7 +75,9 @@ class _FamilyVaultAppState extends State<FamilyVaultApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    final VaultSession? session = _session;
+
+    final Widget app = MaterialApp(
       title: appName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
@@ -83,6 +85,18 @@ class _FamilyVaultAppState extends State<FamilyVaultApp> {
       themeMode: ThemeMode.system,
       home: _buildHome(),
     );
+
+    // SessionScope goes ABOVE MaterialApp, not inside it.
+    //
+    // MaterialApp builds the Navigator, so anything passed as `home` sits
+    // below that Navigator — and a route pushed onto it is a sibling of
+    // `home`, not a descendant. With the scope inside, every pushed screen
+    // (the item editor, the generator) could not find the session and threw
+    // while building. Above the Navigator, every route reaches it.
+    if (session == null) {
+      return app;
+    }
+    return SessionScope(session: session, child: app);
   }
 
   Widget _buildHome() {
@@ -90,11 +104,10 @@ class _FamilyVaultAppState extends State<FamilyVaultApp> {
     if (error != null) {
       return _StartupFailure(detail: error);
     }
-    final VaultSession? session = _session;
-    if (session == null) {
+    if (_session == null) {
       return const _Starting();
     }
-    return SessionScope(session: session, child: const _SessionRouter());
+    return const _SessionRouter();
   }
 }
 
