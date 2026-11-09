@@ -1,17 +1,20 @@
 name: Crypto library probe
 
-# Temporary, manually triggered. Settles decision D-003 with evidence instead
-# of assumption.
+# Temporary, manually triggered. Settles decision D-003 with evidence.
 #
-# Two questions have to be answered before the cryptographic core can be
-# written, and neither can be answered in the authoring environment, which has
-# no Flutter SDK and cannot reach pub.dev:
+# Probe 1 (run 42618366937) established that:
+#   - sodium 4.1.2+1 and sodium_libs 4.0.1 resolve
+#   - an Android APK and a Windows application both still build with them
+#   - libsodium 1.0.18 installs on the Linux runner as libsodium.so.23
+#   - Crypto exposes aeadXChaCha20Poly1305IETF
+#   - there is NO lib/src/api/pwhash.dart, so Argon2id is not in the base API;
+#     it belongs to the "sumo" variant
 #
-#   1. Does adding libsodium bindings still build an Android APK and a Windows
-#      application? A native dependency can break either.
-#   2. What is the exact API of the resolved version? Guessing method
-#      signatures from documentation snippets wastes CI runs, so this prints
-#      the package's own public interface from the pub cache.
+# Probe 2 answers what remains before the core can be written: where Pwhash
+# lives, whether sodium_libs can supply a sumo build for Android and Windows,
+# and the exact signatures of the methods this project will call. Printing the
+# files whole rather than grepping them, because probe 1's grep matched only
+# getters and missed every method.
 #
 # Removed once D-003 is recorded.
 
@@ -22,8 +25,8 @@ permissions:
   contents: read
 
 jobs:
-  resolve-and-inspect:
-    name: Resolve, then print the real API
+  inspect:
+    name: Locate Pwhash and print exact signatures
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -34,92 +37,72 @@ jobs:
           flutter-version: 3.47.9
           cache: true
 
-      - name: Add the candidate packages
+      - name: Add candidates, including the sumo variant if one exists
         run: |
           flutter pub add sodium sodium_libs
-          echo "::group::Resolved versions"
-          grep -A1 -E "^  sodium" pubspec.yaml || true
-          flutter pub deps --no-dev --style=compact | grep -iE "sodium|ffi" || true
+          echo "::group::Is there a separate sumo package?"
+          flutter pub add sodium_libs_sumo 2>&1 | tail -5 || \
+            echo "NO sodium_libs_sumo package (or it failed to resolve)"
+          echo "::endgroup::"
+          echo "::group::pubspec dependencies"
+          sed -n '/^dependencies:/,/^dev_dependencies:/p' pubspec.yaml
           echo "::endgroup::"
 
-      # libsodium must be present for host unit tests to exercise the real
-      # primitives rather than a stand-in.
-      - name: Check libsodium availability on the runner
+      - name: Where does Pwhash live?
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y libsodium-dev
-          echo "::group::Installed libsodium"
-          dpkg -l | grep -i sodium || true
-          ldconfig -p | grep -i sodium || true
+          CACHE="${PUB_CACHE:-$HOME/.pub-cache}"
+          echo "::group::Files mentioning pwhash across all sodium packages"
+          grep -rl -i "pwhash" "$CACHE"/hosted/pub.dev/sodium*/lib 2>/dev/null \
+            | sed "s|$CACHE/hosted/pub.dev/||" | sort
+          echo "::endgroup::"
+          echo "::group::Sumo entry points"
+          find "$CACHE"/hosted/pub.dev/sodium*/lib -iname "*sumo*" 2>/dev/null \
+            | sed "s|$CACHE/hosted/pub.dev/||" | sort
+          echo "::endgroup::"
+          echo "::group::sodium_libs package contents"
+          find "$CACHE"/hosted/pub.dev/sodium_libs-*/lib -name "*.dart" 2>/dev/null \
+            | sed "s|$CACHE/hosted/pub.dev/||" | sort
           echo "::endgroup::"
 
-      - name: Print the public API this project will be written against
+      - name: Print the files this project will be written against
         run: |
-          ROOT=$(find "${PUB_CACHE:-$HOME/.pub-cache}" -maxdepth 4 -type d -name "sodium-*" | head -1)
-          LIBS=$(find "${PUB_CACHE:-$HOME/.pub-cache}" -maxdepth 4 -type d -name "sodium_libs-*" | head -1)
-          echo "sodium at: $ROOT"
-          echo "sodium_libs at: $LIBS"
+          CACHE="${PUB_CACHE:-$HOME/.pub-cache}"
+          ROOT=$(find "$CACHE"/hosted/pub.dev -maxdepth 1 -type d -name "sodium-*" | head -1)
 
-          for f in \
-            "$LIBS/lib/sodium_libs.dart" \
-            "$ROOT/lib/sodium.dart" \
-            "$ROOT/lib/src/api/sodium.dart" \
-            "$ROOT/lib/src/api/crypto.dart" \
-            "$ROOT/lib/src/api/pwhash.dart" \
-            "$ROOT/lib/src/api/aead.dart" \
-            "$ROOT/lib/src/api/secure_key.dart" \
-            "$ROOT/lib/src/api/randombytes.dart" \
-            "$ROOT/lib/src/api/sodium_init.dart"
-          do
-            if [ -f "$f" ]; then
-              echo "::group::$(basename "$f")"
-              # Declarations only: the signatures, not the implementations.
-              grep -nE "^(abstract |final |sealed )?class|^ *(abstract|external)? *[A-Za-z0-9_<>, ?\[\]]+ +[a-zA-Z0-9_]+\(|^ *[A-Za-z0-9_<>, ?]+ get |^ *static |^ *const |^enum |^ *factory " "$f" | head -80
+          show() {
+            if [ -f "$1" ]; then
+              echo "::group::FILE $(echo "$1" | sed "s|$CACHE/hosted/pub.dev/||")"
+              cat -n "$1"
               echo "::endgroup::"
             else
-              echo "MISSING: $f"
+              echo "MISSING: $1"
             fi
+          }
+
+          # The AEAD interface: encrypt, decrypt, and their detached forms.
+          show "$ROOT/lib/src/api/aead.dart"
+          # The sumo entry point, which should expose Pwhash.
+          show "$ROOT/lib/sodium_sumo.dart"
+          # Whatever file actually declares Pwhash.
+          for f in $(grep -rl "abstract class Pwhash\|class Pwhash" "$ROOT/lib" 2>/dev/null); do
+            show "$f"
           done
+          # Key material handling and the random source.
+          show "$ROOT/lib/src/api/secure_key.dart"
+          show "$ROOT/lib/src/api/randombytes.dart"
 
-          echo "::group::All api files present"
-          find "$ROOT/lib" -name "*.dart" | sed "s|$ROOT/||" | sort
-          echo "::endgroup::"
-
-  build-android:
-    name: Does an APK still build with libsodium?
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          flutter-version: 3.47.9
-          cache: true
-      - run: flutter pub add sodium sodium_libs
-      - name: Build release APK
-        run: flutter build apk --release
-      - run: ls -lh build/app/outputs/flutter-apk/
-
-  build-windows:
-    name: Does a Windows build still work with libsodium?
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          flutter-version: 3.47.9
-          cache: true
-      - run: flutter pub add sodium sodium_libs
-      - name: Build release application
-        run: flutter build windows --release
-      - name: List output and confirm libsodium ships beside the app
-        shell: pwsh
+      - name: Print the sumo crypto surface and the init entry points
         run: |
-          $dir = "build/windows/x64/runner/Release"
-          if (-not (Test-Path $dir)) { $dir = "build/windows/runner/Release" }
-          Get-ChildItem $dir | Select-Object Name, Length
+          CACHE="${PUB_CACHE:-$HOME/.pub-cache}"
+          ROOT=$(find "$CACHE"/hosted/pub.dev -maxdepth 1 -type d -name "sodium-*" | head -1)
+          LIBS=$(find "$CACHE"/hosted/pub.dev -maxdepth 1 -type d -name "sodium_libs-*" | head -1)
+          for f in $(find "$ROOT/lib" -iname "*sumo*" -name "*.dart" 2>/dev/null | head -8); do
+            echo "::group::FILE $(echo "$f" | sed "s|$CACHE/hosted/pub.dev/||")"
+            cat -n "$f" | head -120
+            echo "::endgroup::"
+          done
+          for f in $(find "$LIBS/lib" -name "*.dart" 2>/dev/null | head -10); do
+            echo "::group::FILE $(echo "$f" | sed "s|$CACHE/hosted/pub.dev/||")"
+            cat -n "$f" | head -120
+            echo "::endgroup::"
+          done
