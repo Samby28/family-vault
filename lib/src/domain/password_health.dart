@@ -338,8 +338,7 @@ abstract final class PasswordHealth {
       final int step = password.codeUnitAt(i) - password.codeUnitAt(i - 1);
       ascending = step == 1 ? ascending + 1 : 1;
       descending = step == -1 ? descending + 1 : 1;
-      if (ascending >= _sequenceRunLength ||
-          descending >= _sequenceRunLength) {
+      if (ascending >= _sequenceRunLength || descending >= _sequenceRunLength) {
         return true;
       }
     }
