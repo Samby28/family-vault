@@ -74,8 +74,9 @@ is irrelevant and safety is not.
 |---|---|---|
 | 1 | 42618366937 | `sodium` resolves; an Android APK and a Windows application both still build with libsodium added; libsodium 1.0.18 installs on the Linux runner |
 | 1 | 42618366937 | No `pwhash.dart` in the base API — Argon2id is in the "sumo" interface, not the default one |
-| 2 | 42619562544 | `SodiumSumoInit.init()` is synchronous and uses a bundled libsodium, so no dynamic-library loader is needed; `Aead.encrypt`/`decrypt` accept `additionalData`, which is what lets the header be authenticated; `sodium_libs` is **deprecated**, with everything moved into `sodium` |
+| 2 | 42619562544 | `SodiumSumoInit.init()` uses a bundled libsodium, so no dynamic-library loader is needed; `Aead.encrypt`/`decrypt` accept `additionalData`, which is what lets the header be authenticated; `sodium_libs` is **deprecated**, with everything moved into `sodium` |
 | 3 | 42620302996 | `CryptoPwhashAlgorithm.argon2id13` is the explicit Argon2id value; `sodium` alone builds on both platforms without the deprecated wrapper |
+| 4 | 42624506031 | Correction to probe 2: `SodiumSumoInit.init()` returns `FutureOr<SodiumSumo>`, not `SodiumSumo`. The signature probe 2 read was the FFI-specific one; the conditional export resolves to a declaration that may be asynchronous, because the web build has to load a WebAssembly module first. Initialisation is therefore awaited, which covers both targets from one call site |
 
 **Consequences recorded elsewhere.** Argon2id is named explicitly at the call
 site rather than left to the library default, because the same call also offers

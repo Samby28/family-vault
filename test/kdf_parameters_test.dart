@@ -9,7 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 /// denial-of-service that triggers the moment a user opens a file someone sent
 /// them. See docs/decisions-and-risks.md, decision D-009.
 void main() {
-  const Argon2idParameters sane = const Argon2idParameters(
+  const Argon2idParameters sane = Argon2idParameters(
     opsLimit: 2,
     memLimitBytes: 64 * 1024 * 1024,
   );

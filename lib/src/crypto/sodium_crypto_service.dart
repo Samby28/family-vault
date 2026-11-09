@@ -25,10 +25,15 @@ final class SodiumCryptoService implements CryptoService {
 
   /// Initialises libsodium and returns a service using it.
   ///
-  /// Synchronous: libsodium ships with the application rather than being
-  /// loaded from the system, so there is nothing to await.
-  factory SodiumCryptoService.initialise() =>
-      SodiumCryptoService(SodiumSumoInit.init());
+  /// Asynchronous because `SodiumSumoInit.init()` returns `FutureOr`: on the
+  /// Dart VM libsodium ships with the application and is ready immediately,
+  /// but on the web the WebAssembly module has to load first. Awaiting covers
+  /// both, so this one call site works on every target.
+  ///
+  /// Call it once, at startup, and hold the result. Initialising per operation
+  /// would be wasteful and, on the web, slow.
+  static Future<SodiumCryptoService> initialise() async =>
+      SodiumCryptoService(await SodiumSumoInit.init());
 
   final SodiumSumo _sodium;
 

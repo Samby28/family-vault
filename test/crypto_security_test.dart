@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:family_vault/src/core/failures.dart';
 import 'package:family_vault/src/crypto/crypto_service.dart';
@@ -31,8 +30,8 @@ void main() {
     memLimitBytes: Argon2idParameters.minMemLimitBytes,
   );
 
-  setUpAll(() {
-    crypto = SodiumCryptoService.initialise();
+  setUpAll(() async {
+    crypto = await SodiumCryptoService.initialise();
     codec = VaultCodec(crypto);
   });
 
