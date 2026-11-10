@@ -138,12 +138,19 @@ jobs:
           can be set up straight from a backup: the first screen offers
           "Restore from a backup file instead".
 
-          **New: keep two devices in step through a shared folder.** Point both
-          devices at the same folder - your Google Drive, OneDrive or Dropbox
-          folder on the device, a network share, even a USB stick - and press
-          **Sync now**. There is no account and no sign-in: this app never
-          talks to the cloud service. Whatever already keeps that folder in
-          step does the moving, and only ever sees encrypted files.
+          **New: keep two devices in step through a shared folder.** Point
+          both devices at the same folder and press **Sync now**. There is no
+          account and no sign-in: this app never talks to a cloud service.
+          Whatever already keeps that folder in step does the moving, and only
+          ever sees encrypted files.
+
+          On Windows that folder can be your Google Drive, OneDrive or Dropbox
+          folder, or a network share. **On Android it cannot**: those apps keep
+          their offline files to themselves and offer no folder another app can
+          read. A phone needs an app that mirrors a cloud folder into phone
+          storage, such as Syncthing or FolderSync - or skip shared folders and
+          use Backup and Import, which always works and merges exactly the same
+          way.
 
           Vaults are merged entry by entry: whichever side changed an entry
           more recently wins, entries you deleted stay deleted, and nothing you

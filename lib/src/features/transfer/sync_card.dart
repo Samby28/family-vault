@@ -52,18 +52,33 @@ class _SyncCardState extends State<SyncCard> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Point both devices at the same folder — your Google Drive, '
-              'OneDrive or Dropbox folder on this device, a network share, or '
-              'even a USB stick. Each device keeps its own copy of the vault '
-              'there, encrypted, and a sync merges the others in.',
+              'Point both devices at the same folder. Each keeps its own copy '
+              'of the vault there, encrypted, and a sync merges the others in.',
               style: theme.textTheme.bodyMedium,
             ),
             const SizedBox(height: 8),
             Text(
-              'No account and no sign-in. This app never talks to the cloud '
+              'No account and no sign-in. This app never talks to a cloud '
               'service; whatever already keeps that folder in step does the '
               'moving, and only ever sees encrypted files.',
               style: theme.textTheme.bodySmall,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'On Windows, use the Google Drive, OneDrive or Dropbox folder '
+              'on this PC, or a network share.',
+              style: theme.textTheme.bodySmall,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'On Android, those apps keep their files to themselves and do '
+              'not offer a folder this app can read. You need an app that '
+              'mirrors a cloud folder into phone storage, such as Syncthing '
+              'or FolderSync \u2014 or skip this and use Backup and Import '
+              'above, which always works.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.error,
+              ),
             ),
             const SizedBox(height: 16),
             if (device.syncConfigured)
