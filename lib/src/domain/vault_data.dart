@@ -22,6 +22,7 @@ final class VaultData {
     this.settings = const VaultSettings(),
     this.tombstones = const <Tombstone>[],
     this.settingsUpdatedAt,
+    this.syncSecret,
   });
 
   /// Schema version of the payload, separate from the file format version.
@@ -61,6 +62,28 @@ final class VaultData {
   /// Settings live in the vault so they follow it between devices, which means
   /// a merge has to decide whose settings win. This is how.
   final DateTime? settingsUpdatedAt;
+
+  /// A shared secret used to seal the files two devices exchange, as 64
+  /// lowercase hexadecimal characters, or null if shared-folder sync has
+  /// never been set up.
+  ///
+  /// Why this exists rather than reusing the master password: the session
+  /// never keeps the master password, only a key derived with this vault
+  /// file's own salt. A file written by another device has a different salt,
+  /// so that key cannot open it, and nothing in memory can. Asking for the
+  /// master password on every sync would defeat the point of automatic sync,
+  /// and requiring both devices to share a master password would be a
+  /// constraint the rest of the design does not impose.
+  ///
+  /// It lives inside the encrypted payload, so it travels with the vault on
+  /// the first manual import and is never written out in the clear. Two
+  /// devices come to hold the same secret by that one manual transfer; from
+  /// then on neither needs a password to read the other's exchange file.
+  ///
+  /// It is NOT a second way into the vault. The vault file itself is still
+  /// sealed with a key derived from the master password; this secret only
+  /// protects the copies placed in a shared folder.
+  final String? syncSecret;
 
   /// Live tombstones, with ones older than [Tombstone.keepFor] dropped.
   ///
@@ -269,6 +292,7 @@ final class VaultData {
     VaultSettings? settings,
     List<Tombstone>? tombstones,
     DateTime? settingsUpdatedAt,
+    String? syncSecret,
   }) => VaultData(
     schemaVersion: schemaVersion,
     folders: folders ?? this.folders,
@@ -276,7 +300,29 @@ final class VaultData {
     settings: settings ?? this.settings,
     tombstones: tombstones ?? this.tombstones,
     settingsUpdatedAt: settingsUpdatedAt ?? this.settingsUpdatedAt,
+    syncSecret: syncSecret ?? this.syncSecret,
   );
+
+  /// A copy carrying [secret] as the shared-folder sync secret.
+  VaultData withSyncSecret(String secret) => copyWith(syncSecret: secret);
+
+  /// Reads a sync secret from stored form, rejecting anything malformed.
+  ///
+  /// A short or non-hexadecimal value would weaken every exchange file
+  /// without the user being told, so a damaged one is treated as absent and
+  /// sync simply has to be set up again.
+  static String? _validSyncSecret(Object? raw) {
+    if (raw is! String || raw.length != 64) {
+      return null;
+    }
+    const String hex = '0123456789abcdef';
+    for (int i = 0; i < raw.length; i++) {
+      if (!hex.contains(raw[i])) {
+        return null;
+      }
+    }
+    return raw;
+  }
 
   /// Stored form.
   Map<String, Object?> toJson() => <String, Object?>{
@@ -286,6 +332,7 @@ final class VaultData {
     'settings': settings.toJson(),
     'tombstones': tombstones.map((Tombstone t) => t.toJson()).toList(),
     'settingsUpdatedAt': settingsUpdatedAt?.toUtc().toIso8601String(),
+    'syncSecret': syncSecret,
   };
 
   /// Serialises the payload to the bytes that get encrypted.
@@ -386,6 +433,7 @@ final class VaultData {
         settingsUpdatedAt: rawSettingsStamp is String
             ? DateTime.tryParse(rawSettingsStamp)
             : null,
+        syncSecret: _validSyncSecret(root['syncSecret']),
       ),
       droppedItems: droppedItems,
       droppedFolders: droppedFolders,

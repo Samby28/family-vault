@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'support/fake_crypto_service.dart';
 import 'support/fake_file_transfer.dart';
+import 'support/in_memory_device_settings.dart';
 import 'support/in_memory_vault_repository.dart';
 
 /// The backup screen, driven the way a person would drive it.
@@ -16,12 +17,18 @@ import 'support/in_memory_vault_repository.dart';
 /// their backup.
 void main() {
   late InMemoryVaultRepository repository;
+  late InMemoryDeviceSettingsStore deviceStore;
   late VaultSession session;
   late FakeFileTransfer files;
 
   setUp(() {
     repository = InMemoryVaultRepository();
-    session = VaultSession(crypto: FakeCryptoService(), repository: repository);
+    deviceStore = InMemoryDeviceSettingsStore();
+    session = VaultSession(
+      crypto: FakeCryptoService(),
+      repository: repository,
+      deviceSettings: deviceStore,
+    );
     files = FakeFileTransfer();
   });
 

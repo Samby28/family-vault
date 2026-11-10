@@ -22,6 +22,7 @@ import '../../app/vault_session.dart';
 import '../../platform/file_transfer.dart';
 import '../../vault/vault_merge.dart';
 import 'password_prompt.dart';
+import 'sync_card.dart';
 
 /// Export and import, on one screen.
 class BackupView extends StatefulWidget {
@@ -76,6 +77,8 @@ class _BackupViewState extends State<BackupView> {
             ),
           ),
         ],
+        const SizedBox(height: 16),
+        const SyncCard(),
         const SizedBox(height: 16),
         const _TransferAdvice(),
       ],

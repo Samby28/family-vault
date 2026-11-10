@@ -6,6 +6,7 @@ import 'package:family_vault/src/vault/vault_merge.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/fake_crypto_service.dart';
+import 'support/in_memory_device_settings.dart';
 import 'support/in_memory_vault_repository.dart';
 
 /// Export, read back, and merge — the three steps of moving a vault between
@@ -22,12 +23,18 @@ void main() {
 
   late FakeCryptoService crypto;
   late InMemoryVaultRepository repository;
+  late InMemoryDeviceSettingsStore deviceStore;
   late VaultSession session;
 
   setUp(() {
     crypto = FakeCryptoService();
     repository = InMemoryVaultRepository();
-    session = VaultSession(crypto: crypto, repository: repository);
+    deviceStore = InMemoryDeviceSettingsStore();
+    session = VaultSession(
+      crypto: crypto,
+      repository: repository,
+      deviceSettings: deviceStore,
+    );
   });
 
   tearDown(() => session.dispose());

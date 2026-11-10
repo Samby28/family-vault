@@ -9,10 +9,12 @@ import '../domain/folder.dart';
 import '../domain/vault_data.dart';
 import '../domain/vault_item.dart';
 import '../domain/vault_settings.dart';
+import '../platform/device_settings.dart';
 import '../vault/vault_codec.dart';
 import '../vault/vault_header.dart';
 import '../vault/vault_merge.dart';
 import '../vault/vault_repository.dart';
+import '../vault/vault_sync.dart';
 
 /// What state the vault is in.
 enum VaultStatus {
@@ -79,14 +81,25 @@ final class BackupContents {
 /// so keeping the password around would leave it on the heap for as long as
 /// the process ran.
 class VaultSession extends ChangeNotifier with WidgetsBindingObserver {
-  VaultSession({required CryptoService crypto, required this.repository})
-    : _codec = VaultCodec(crypto);
+  VaultSession({
+    required CryptoService crypto,
+    required this.repository,
+    required this.deviceSettings,
+  }) : _codec = VaultCodec(crypto),
+       _crypto = crypto;
 
   final VaultCodec _codec;
+  final CryptoService _crypto;
 
   /// Where the vault is stored. Public because a private field cannot be a
   /// named initializing formal in Dart.
   final VaultRepository repository;
+
+  /// Settings belonging to this device rather than to the vault: the shared
+  /// sync folder and this device's name. Injected rather than defaulted,
+  /// because a quietly-in-memory store would make sync forget its folder at
+  /// every restart and look like a bug in sync itself.
+  final DeviceSettingsStore deviceSettings;
 
   VaultStatus _status = VaultStatus.starting;
   VaultData? _data;
@@ -437,6 +450,156 @@ class VaultSession extends ChangeNotifier with WidgetsBindingObserver {
       _restartLockTimer();
       return true;
     });
+  }
+
+  // -------------------------------------------------------- shared-folder sync
+
+  DeviceSettings _device = DeviceSettings.none;
+
+  /// This device's own sync settings.
+  DeviceSettings get device => _device;
+
+  /// True when this vault carries a sync secret, so another device set up
+  /// through it can read this device's exchange file without a password.
+  bool get syncReady => _data?.syncSecret != null;
+
+  /// Loads this device's settings. Called once at startup.
+  Future<void> loadDeviceSettings() async {
+    _device = await deviceSettings.read();
+    notifyListeners();
+  }
+
+  /// Points this device at a shared folder and names it.
+  ///
+  /// Generates the vault's sync secret if it does not have one yet. The
+  /// secret is 32 random bytes from the cryptographic generator, held as hex
+  /// so it can be used wherever a password is expected, and it lives inside
+  /// the encrypted payload - so the second device receives it through the one
+  /// manual import that sets sharing up, and never through the folder.
+  Future<bool> enableSync({
+    required String folder,
+    required String deviceName,
+  }) async {
+    final VaultData? current = _data;
+    if (current == null) {
+      _fail('Unlock the vault before setting up sharing.');
+      return false;
+    }
+    final String trimmed = deviceName.trim();
+    if (trimmed.isEmpty) {
+      _fail('Give this device a name, so you can tell the two apart.');
+      return false;
+    }
+    if (current.syncSecret == null) {
+      final bool saved = await _mutate(
+        (VaultData d) => d.withSyncSecret(_newSyncSecret()),
+      );
+      if (!saved) {
+        return false;
+      }
+    }
+    _device = _device.copyWith(syncFolder: folder, deviceName: trimmed);
+    await deviceSettings.write(_device);
+    notifyListeners();
+    return true;
+  }
+
+  /// Stops using the shared folder on this device.
+  ///
+  /// Leaves the vault's sync secret in place and leaves the files in the
+  /// folder alone: deleting them would be a destructive act on a folder other
+  /// devices are also using, and this device cannot know whether they still
+  /// need what is there.
+  Future<bool> disableSync() async {
+    _device = _device.copyWith(clearSync: true);
+    await deviceSettings.write(_device);
+    notifyListeners();
+    return true;
+  }
+
+  /// Merges every other device's file in the shared folder, then writes this
+  /// device's own file back out carrying the result.
+  Future<SyncReport?> syncNow({SyncFolder? folderOverride}) async {
+    final VaultData? current = _data;
+    if (current == null) {
+      _fail('Unlock the vault before syncing.');
+      return null;
+    }
+    final String? secret = current.syncSecret;
+    final String? name = _device.deviceName;
+    final String? path = _device.syncFolder;
+    if (secret == null || name == null || (path == null && folderOverride == null)) {
+      _fail('Set up a shared folder first.');
+      return null;
+    }
+
+    _busy = true;
+    _lastError = null;
+    notifyListeners();
+    try {
+      final VaultSync sync = VaultSync(
+        codec: _codec,
+        folder: folderOverride ?? DirectorySyncFolder(path!),
+      );
+      final SyncReport report = await sync.run(
+        local: current,
+        syncSecret: secret,
+        deviceName: name,
+      );
+      if (report.localChanged) {
+        // Saved through the normal path, so the vault on this device is
+        // re-sealed with its own key and written atomically, exactly as any
+        // other change is.
+        final bool saved = await _saveMerged(report.merged);
+        if (!saved) {
+          return null;
+        }
+      }
+      _device = _device.copyWith(lastSyncedAt: DateTime.now());
+      await deviceSettings.write(_device);
+      _restartLockTimer();
+      return report;
+    } on VaultFailure catch (failure) {
+      _fail(failure.message);
+      return null;
+    } on Object catch (error) {
+      // The type only: a sync failure must not put a path or file contents on
+      // screen.
+      _fail('Syncing failed (${error.runtimeType}).');
+      return null;
+    } finally {
+      _busy = false;
+      notifyListeners();
+    }
+  }
+
+  /// Writes an already-merged vault, without merging again.
+  Future<bool> _saveMerged(VaultData merged) async {
+    final VaultKeyring? keyring = _keyring;
+    if (keyring == null) {
+      _fail('The vault locked while syncing. Unlock it and sync again.');
+      return false;
+    }
+    try {
+      await repository.write(
+        _codec.sealWith(keyring: keyring, payload: merged.encode()),
+      );
+      _data = merged;
+      return true;
+    } on VaultFailure catch (failure) {
+      _fail(failure.message);
+      return false;
+    }
+  }
+
+  /// 32 random bytes as 64 hexadecimal characters.
+  String _newSyncSecret() {
+    final Uint8List bytes = _crypto.randomBytes(32);
+    final StringBuffer out = StringBuffer();
+    for (final int byte in bytes) {
+      out.write(byte.toRadixString(16).padLeft(2, '0'));
+    }
+    return out.toString();
   }
 
   // --------------------------------------------------------------- clipboard

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/fake_crypto_service.dart';
+import 'support/in_memory_device_settings.dart';
 import 'support/in_memory_vault_repository.dart';
 
 /// End-to-end tests of the interface, driven the way a person would drive it.
@@ -13,11 +14,17 @@ import 'support/in_memory_vault_repository.dart';
 /// screens are actually wired to the vault — not merely that they render.
 void main() {
   late InMemoryVaultRepository repository;
+  late InMemoryDeviceSettingsStore deviceStore;
   late VaultSession session;
 
   setUp(() {
     repository = InMemoryVaultRepository();
-    session = VaultSession(crypto: FakeCryptoService(), repository: repository);
+    deviceStore = InMemoryDeviceSettingsStore();
+    session = VaultSession(
+      crypto: FakeCryptoService(),
+      repository: repository,
+      deviceSettings: deviceStore,
+    );
   });
 
   /// Runs a test and then shuts everything down inside the test body.

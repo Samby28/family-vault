@@ -6,6 +6,7 @@ import 'package:family_vault/src/domain/vault_settings.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/fake_crypto_service.dart';
+import 'support/in_memory_device_settings.dart';
 import 'support/in_memory_vault_repository.dart';
 
 void main() {
@@ -13,11 +14,17 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late InMemoryVaultRepository repository;
+  late InMemoryDeviceSettingsStore deviceStore;
   late VaultSession session;
 
   setUp(() {
     repository = InMemoryVaultRepository();
-    session = VaultSession(crypto: FakeCryptoService(), repository: repository);
+    deviceStore = InMemoryDeviceSettingsStore();
+    session = VaultSession(
+      crypto: FakeCryptoService(),
+      repository: repository,
+      deviceSettings: deviceStore,
+    );
   });
 
   tearDown(() {

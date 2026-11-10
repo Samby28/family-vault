@@ -5,6 +5,7 @@ import '../crypto/sodium_crypto_service.dart';
 import '../features/home/home_shell.dart';
 import '../features/onboarding/create_vault_screen.dart';
 import '../features/onboarding/unlock_screen.dart';
+import '../platform/device_settings.dart';
 import '../platform/file_transfer.dart';
 import '../vault/vault_repository.dart';
 import 'build_info.dart';
@@ -48,6 +49,7 @@ class _FamilyVaultAppState extends State<FamilyVaultApp> {
     if (provided != null) {
       _session = provided;
       provided.initialise();
+      provided.loadDeviceSettings();
     } else {
       _start();
     }
@@ -58,11 +60,15 @@ class _FamilyVaultAppState extends State<FamilyVaultApp> {
       final CryptoService crypto = await SodiumCryptoService.initialise();
       final VaultRepository repository =
           await FileVaultRepository.forPlatform();
+      final DeviceSettingsStore deviceSettings =
+          await FileDeviceSettingsStore.forPlatform();
       final VaultSession session = VaultSession(
         crypto: crypto,
         repository: repository,
+        deviceSettings: deviceSettings,
       );
       await session.initialise();
+      await session.loadDeviceSettings();
       if (mounted) {
         setState(() => _session = session);
       }
