@@ -98,18 +98,20 @@ void main() {
       expect(session.device.syncFolder, '/elsewhere');
     });
 
-    test('stores the folder and name on the device, not in the vault',
-        () async {
-      await openVaultWithSyncOn();
+    test(
+      'stores the folder and name on the device, not in the vault',
+      () async {
+        await openVaultWithSyncOn();
 
-      expect(deviceStore.stored.syncFolder, '/shared');
-      expect(deviceStore.stored.deviceName, 'laptop');
-      // The vault payload must not carry them, or each device would overwrite
-      // the other's at every merge.
-      final String payload = String.fromCharCodes(session.data!.encode());
-      expect(payload, isNot(contains('/shared')));
-      expect(payload, isNot(contains('laptop')));
-    });
+        expect(deviceStore.stored.syncFolder, '/shared');
+        expect(deviceStore.stored.deviceName, 'laptop');
+        // The vault payload must not carry them, or each device would overwrite
+        // the other's at every merge.
+        final String payload = String.fromCharCodes(session.data!.encode());
+        expect(payload, isNot(contains('/shared')));
+        expect(payload, isNot(contains('laptop')));
+      },
+    );
   });
 
   group('syncing', () {
@@ -198,14 +200,11 @@ void main() {
       expect(deviceStore.stored.lastSyncedAt, isNotNull);
     });
 
-    test('reports a folder it cannot reach without pretending to succeed',
-        () async {
+    test('reports a folder it cannot reach without pretending to succeed', () async {
       await openVaultWithSyncOn();
       folder.listFailure = StateError('the drive is not connected');
 
-      final SyncReport? report = await session.syncNow(
-        folderOverride: folder,
-      );
+      final SyncReport? report = await session.syncNow(folderOverride: folder);
 
       expect(report, isNull);
       expect(session.lastError, isNotNull);
@@ -246,16 +245,18 @@ void main() {
       expect(folder.files, hasLength(before));
     });
 
-    test('keeps the vault\'s sync secret, so turning it back on works',
-        () async {
-      await openVaultWithSyncOn();
-      final String secret = session.data!.syncSecret!;
+    test(
+      'keeps the vault\'s sync secret, so turning it back on works',
+      () async {
+        await openVaultWithSyncOn();
+        final String secret = session.data!.syncSecret!;
 
-      await session.disableSync();
-      await session.enableSync(folder: '/shared', deviceName: 'laptop');
+        await session.disableSync();
+        await session.enableSync(folder: '/shared', deviceName: 'laptop');
 
-      expect(session.data!.syncSecret, secret);
-    });
+        expect(session.data!.syncSecret, secret);
+      },
+    );
   });
 
   group('the secret travels with the vault, not through the folder', () {
@@ -265,9 +266,7 @@ void main() {
       // the other's exchange file.
       await openVaultWithSyncOn();
       final String secret = session.data!.syncSecret!;
-      final Uint8List backup = session.exportEncrypted(
-        'the backup password',
-      )!;
+      final Uint8List backup = session.exportEncrypted('the backup password')!;
 
       await session.deleteVault();
       await session.createFromBackup(

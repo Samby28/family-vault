@@ -528,7 +528,9 @@ class VaultSession extends ChangeNotifier with WidgetsBindingObserver {
     final String? secret = current.syncSecret;
     final String? name = _device.deviceName;
     final String? path = _device.syncFolder;
-    if (secret == null || name == null || (path == null && folderOverride == null)) {
+    if (secret == null ||
+        name == null ||
+        (path == null && folderOverride == null)) {
       _fail('Set up a shared folder first.');
       return null;
     }

@@ -34,9 +34,12 @@ void main() {
   });
 
   VaultItem login(String title, {int minute = 0}) {
-    final DateTime stamp = DateTime.utc(2026, 11, 1, 12).add(
-      Duration(minutes: minute),
-    );
+    final DateTime stamp = DateTime.utc(
+      2026,
+      11,
+      1,
+      12,
+    ).add(Duration(minutes: minute));
     return VaultItem.create(
       type: VaultItemType.login,
       title: title,
@@ -68,35 +71,34 @@ void main() {
   group('naming a device\'s file', () {
     test('turns a name into something a file system accepts', () {
       expect(VaultSync.fileNameFor('laptop'), 'vault-laptop.fvault');
-      expect(VaultSync.fileNameFor('Gurpreet\'s Phone'),
-          'vault-gurpreet-s-phone.fvault');
-      expect(VaultSync.fileNameFor('  spaced  out  '),
-          'vault-spaced-out.fvault');
+      expect(
+        VaultSync.fileNameFor('Gurpreet\'s Phone'),
+        'vault-gurpreet-s-phone.fvault',
+      );
+      expect(
+        VaultSync.fileNameFor('  spaced  out  '),
+        'vault-spaced-out.fvault',
+      );
     });
 
     test('never produces an empty or path-bearing name', () {
       // A name made only of punctuation, or one containing a separator, must
       // not become a file that escapes the folder.
       expect(VaultSync.fileNameFor('***'), 'vault-device.fvault');
-      expect(VaultSync.fileNameFor('../../etc/passwd'),
-          isNot(contains('/')));
-      expect(
-        VaultSync.fileNameFor('..\\..\\windows'),
-        isNot(contains('\\')),
-      );
+      expect(VaultSync.fileNameFor('../../etc/passwd'), isNot(contains('/')));
+      expect(VaultSync.fileNameFor('..\\..\\windows'), isNot(contains('\\')));
     });
 
     test('is stable, so a device keeps writing the same file', () {
-      expect(
-        VaultSync.fileNameFor('phone'),
-        VaultSync.fileNameFor('phone'),
-      );
+      expect(VaultSync.fileNameFor('phone'), VaultSync.fileNameFor('phone'));
     });
   });
 
   group('a folder with nobody else in it', () {
     test('writes this device\'s file and says so', () async {
-      final SyncReport report = await run(vaultWith(<VaultItem>[login('Bank')]));
+      final SyncReport report = await run(
+        vaultWith(<VaultItem>[login('Bank')]),
+      );
 
       expect(report.peers, isEmpty);
       expect(report.wroteOwnFile, isTrue);
@@ -105,16 +107,18 @@ void main() {
       expect(report.localChanged, isFalse);
     });
 
-    test('writes a file the other device can open with the same secret',
-        () async {
-      await run(vaultWith(<VaultItem>[login('Bank')]));
+    test(
+      'writes a file the other device can open with the same secret',
+      () async {
+        await run(vaultWith(<VaultItem>[login('Bank')]));
 
-      final Uint8List written = folder.files['vault-laptop.fvault']!;
-      final VaultData read = VaultData.decode(
-        codec.open(file: written, masterPassword: secret),
-      ).data;
-      expect(read.liveItems.single.title, 'Bank');
-    });
+        final Uint8List written = folder.files['vault-laptop.fvault']!;
+        final VaultData read = VaultData.decode(
+          codec.open(file: written, masterPassword: secret),
+        ).data;
+        expect(read.liveItems.single.title, 'Bank');
+      },
+    );
 
     test('writes even when there was nothing to merge', () async {
       // A device whose file is missing from the folder is invisible to the
@@ -204,18 +208,20 @@ void main() {
       );
     });
 
-    test('the combined report counts every device, not just the last',
-        () async {
-      placeFile('phone', vaultWith(<VaultItem>[login('Email', minute: 5)]));
-      placeFile('tablet', vaultWith(<VaultItem>[login('Shop', minute: 6)]));
+    test(
+      'the combined report counts every device, not just the last',
+      () async {
+        placeFile('phone', vaultWith(<VaultItem>[login('Email', minute: 5)]));
+        placeFile('tablet', vaultWith(<VaultItem>[login('Shop', minute: 6)]));
 
-      final SyncReport report = await run(
-        vaultWith(<VaultItem>[login('Bank')]),
-      );
+        final SyncReport report = await run(
+          vaultWith(<VaultItem>[login('Bank')]),
+        );
 
-      expect(report.peers, hasLength(2));
-      expect(report.outcome!.itemsAdded, 2);
-    });
+        expect(report.peers, hasLength(2));
+        expect(report.outcome!.itemsAdded, 2);
+      },
+    );
   });
 
   group('a file that cannot be used', () {
@@ -247,50 +253,59 @@ void main() {
       );
     });
 
-    test('is reported with both explanations, not just the alarming one',
-        () async {
-      placeFile('phone', vaultWith(<VaultItem>[login('Email')]),
-          sealWith: otherSecret);
+    test(
+      'is reported with both explanations, not just the alarming one',
+      () async {
+        placeFile(
+          'phone',
+          vaultWith(<VaultItem>[login('Email')]),
+          sealWith: otherSecret,
+        );
 
-      final SyncReport report = await run(VaultData(syncSecret: secret));
+        final SyncReport report = await run(VaultData(syncSecret: secret));
 
-      // A different sync secret and a part-written file are indistinguishable
-      // here by design, so the message must offer both rather than accusing
-      // the user of a setup mistake that may not have happened.
-      expect(report.failures.single.message, contains('Set up sharing'));
-      expect(report.failures.single.message, contains('part-written'));
-    });
+        // A different sync secret and a part-written file are indistinguishable
+        // here by design, so the message must offer both rather than accusing
+        // the user of a setup mistake that may not have happened.
+        expect(report.failures.single.message, contains('Set up sharing'));
+        expect(report.failures.single.message, contains('part-written'));
+      },
+    );
 
-    test('a file that vanishes between listing and reading is tolerated',
-        () async {
-      placeFile('phone', vaultWith(<VaultItem>[login('Email')]));
-      placeFile('tablet', vaultWith(<VaultItem>[login('Shop', minute: 3)]));
-      folder.unreadable.add('vault-phone.fvault');
+    test(
+      'a file that vanishes between listing and reading is tolerated',
+      () async {
+        placeFile('phone', vaultWith(<VaultItem>[login('Email')]));
+        placeFile('tablet', vaultWith(<VaultItem>[login('Shop', minute: 3)]));
+        folder.unreadable.add('vault-phone.fvault');
 
-      final SyncReport report = await run(VaultData(syncSecret: secret));
+        final SyncReport report = await run(VaultData(syncSecret: secret));
 
-      expect(report.failures, hasLength(1));
-      expect(
-        report.merged.liveItems.map((VaultItem i) => i.title),
-        contains('Shop'),
-      );
-      expect(folder.written, contains('vault-laptop.fvault'));
-    });
+        expect(report.failures, hasLength(1));
+        expect(
+          report.merged.liveItems.map((VaultItem i) => i.title),
+          contains('Shop'),
+        );
+        expect(folder.written, contains('vault-laptop.fvault'));
+      },
+    );
 
-    test('a payload from a newer app is named as such, not as damage',
-        () async {
-      folder.files['vault-phone.fvault'] = codec.seal(
-        masterPassword: secret,
-        payload: Uint8List.fromList(
-          '{"schemaVersion":99,"items":[]}'.codeUnits,
-        ),
-      );
+    test(
+      'a payload from a newer app is named as such, not as damage',
+      () async {
+        folder.files['vault-phone.fvault'] = codec.seal(
+          masterPassword: secret,
+          payload: Uint8List.fromList(
+            '{"schemaVersion":99,"items":[]}'.codeUnits,
+          ),
+        );
 
-      final SyncReport report = await run(VaultData(syncSecret: secret));
+        final SyncReport report = await run(VaultData(syncSecret: secret));
 
-      expect(report.failures.single.problem, PeerProblem.tooNew);
-      expect(report.failures.single.message, contains('newer version'));
-    });
+        expect(report.failures.single.problem, PeerProblem.tooNew);
+        expect(report.failures.single.message, contains('newer version'));
+      },
+    );
 
     test('an unrelated file in the folder is left alone', () async {
       folder.files['holiday-photo.jpg'] = Uint8List.fromList(<int>[1, 2, 3]);
@@ -340,10 +355,7 @@ void main() {
 
     test('leaves no temporary file behind', () async {
       final DirectorySyncFolder real = DirectorySyncFolder(temporary.path);
-      await real.write(
-        'vault-phone.fvault',
-        Uint8List.fromList(<int>[1]),
-      );
+      await real.write('vault-phone.fvault', Uint8List.fromList(<int>[1]));
 
       final List<String> all = temporary
           .listSync()
@@ -375,10 +387,7 @@ void main() {
         'vault-phone.fvault',
         Uint8List.fromList(List<int>.filled(100, 1)),
       );
-      await real.write(
-        'vault-phone.fvault',
-        Uint8List.fromList(<int>[2, 2]),
-      );
+      await real.write('vault-phone.fvault', Uint8List.fromList(<int>[2, 2]));
 
       expect(await real.read('vault-phone.fvault'), <int>[2, 2]);
     });
@@ -398,7 +407,8 @@ void main() {
       expect(
         crypto.keysDisposed,
         crypto.keysDerived,
-        reason: 'sealing and opening each file must wipe its key, including '
+        reason:
+            'sealing and opening each file must wipe its key, including '
             'on the file that failed to open',
       );
     });

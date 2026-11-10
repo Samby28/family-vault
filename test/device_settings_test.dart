@@ -113,7 +113,9 @@ void main() {
     test('with an empty folder is treated as not configured', () async {
       // An empty string would otherwise pass the null check and have sync try
       // to list the current working directory.
-      settingsFile().writeAsStringSync('{"syncFolder": "", "deviceName": "laptop"}');
+      settingsFile().writeAsStringSync(
+        '{"syncFolder": "", "deviceName": "laptop"}',
+      );
       expect((await store.read()).syncConfigured, isFalse);
     });
 

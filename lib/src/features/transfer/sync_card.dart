@@ -303,9 +303,7 @@ class _Line extends StatelessWidget {
             width: 104,
             child: Text(label, style: theme.textTheme.bodySmall),
           ),
-          Expanded(
-            child: Text(value, style: theme.textTheme.bodyMedium),
-          ),
+          Expanded(child: Text(value, style: theme.textTheme.bodyMedium)),
         ],
       ),
     );

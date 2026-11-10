@@ -90,7 +90,10 @@ abstract interface class DeviceSettingsStore {
 
 /// A [DeviceSettingsStore] backed by a small JSON file on disk.
 final class FileDeviceSettingsStore implements DeviceSettingsStore {
-  FileDeviceSettingsStore({required this.directory, this.fileName = 'device.json'});
+  FileDeviceSettingsStore({
+    required this.directory,
+    this.fileName = 'device.json',
+  });
 
   /// Creates a store in the directory the platform gives this application.
   static Future<FileDeviceSettingsStore> forPlatform() async {

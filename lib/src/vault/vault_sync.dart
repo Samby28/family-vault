@@ -148,11 +148,12 @@ final class PeerResult {
 
   /// What to tell the user about this file.
   String get message => switch (problem) {
-    null => dropped == 0
-        ? '$fileName: merged.'
-        : '$fileName: merged, but $dropped '
-              '${dropped == 1 ? 'entry' : 'entries'} in it could not be read '
-              'and were left out.',
+    null =>
+      dropped == 0
+          ? '$fileName: merged.'
+          : '$fileName: merged, but $dropped '
+                '${dropped == 1 ? 'entry' : 'entries'} in it could not be read '
+                'and were left out.',
     PeerProblem.unreadable =>
       '$fileName: could not be opened. Set up sharing on that device from '
           'this one, or it may have been part-written and will be readable '
@@ -204,8 +205,7 @@ final class SyncReport {
           : 'Nothing to do.';
     }
     final int ok = peers.length - failures.length;
-    final String devices =
-        '$ok ${ok == 1 ? 'device' : 'devices'}';
+    final String devices = '$ok ${ok == 1 ? 'device' : 'devices'}';
     final String change = outcome == null || !outcome!.hadChanges
         ? 'already up to date'
         : outcome!.summary.replaceAll(RegExp(r'\.$'), '');
@@ -354,8 +354,7 @@ final class VaultSync {
       conflicts: running.conflicts + next.conflicts,
       settingsTakenFromOther:
           running.settingsTakenFromOther || next.settingsTakenFromOther,
-      clockSkewSuspected:
-          running.clockSkewSuspected || next.clockSkewSuspected,
+      clockSkewSuspected: running.clockSkewSuspected || next.clockSkewSuspected,
     );
   }
 }
@@ -363,8 +362,7 @@ final class VaultSync {
 /// The result of trying to read one peer's file.
 @immutable
 final class PeerRead {
-  const PeerRead({required this.data, required this.dropped})
-    : problem = null;
+  const PeerRead({required this.data, required this.dropped}) : problem = null;
 
   const PeerRead.failed(this.problem) : data = null, dropped = 0;
 

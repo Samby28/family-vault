@@ -56,4 +56,3 @@ final class InMemorySyncFolder implements SyncFolder {
   @override
   String describe() => 'in memory';
 }
-
