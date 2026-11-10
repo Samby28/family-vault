@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../app/build_info.dart';
+import '../../app/file_transfer_scope.dart';
 import '../../app/session_scope.dart';
 import '../../app/vault_session.dart';
 import '../../domain/master_password_strength.dart';
 import '../../domain/password_generator.dart';
+import '../../platform/file_transfer.dart';
 
 /// First-run screen: choose a master password and create the vault.
 ///
@@ -55,6 +57,37 @@ class _CreateVaultScreenState extends State<CreateVaultScreen> {
       // for as long as this screen stays in memory.
       _password.clear();
       _confirm.clear();
+    }
+  }
+
+  /// Rebuilds this device's vault from a backup file.
+  ///
+  /// The restored vault keeps the backup's own password, which the user
+  /// already knows, so there is no new password to invent at the one moment
+  /// they are least able to think of a good one. It can be changed afterwards
+  /// from Settings.
+  Future<void> _restore() async {
+    final FileTransfer transfer = FileTransferScope.of(context);
+    final VaultSession session = SessionScope.read(context);
+
+    final PickedFile? chosen = await transfer.pick();
+    if (chosen == null || !mounted) {
+      return;
+    }
+    final String? password = await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) => _RestorePasswordDialog(
+        fileName: chosen.name,
+      ),
+    );
+    if (password == null || password.isEmpty || !mounted) {
+      return;
+    }
+
+    setState(() => _submitting = true);
+    await session.createFromBackup(file: chosen.bytes, password: password);
+    if (mounted) {
+      setState(() => _submitting = false);
     }
   }
 
@@ -179,6 +212,18 @@ class _CreateVaultScreenState extends State<CreateVaultScreen> {
                           : const Text('Create my vault'),
                     ),
                   ),
+
+                  const SizedBox(height: 12),
+                  // Restoring belongs here rather than in Settings: a replaced
+                  // or wiped device reaches this screen and nowhere else, and
+                  // this is the one moment when the vault can be rebuilt from
+                  // a backup without any risk of overwriting a live one.
+                  TextButton.icon(
+                    key: const Key('create-restore'),
+                    onPressed: _submitting ? null : _restore,
+                    icon: const Icon(Icons.restore),
+                    label: const Text('Restore from a backup file instead'),
+                  ),
                 ],
               ),
             ),
@@ -302,6 +347,72 @@ class _ErrorBanner extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Asks for the password that protects a backup file.
+///
+/// A widget of its own rather than an inline builder so its controller is
+/// disposed when the dialog closes instead of being left to the garbage
+/// collector with a password still in it.
+class _RestorePasswordDialog extends StatefulWidget {
+  const _RestorePasswordDialog({required this.fileName});
+
+  final String fileName;
+
+  @override
+  State<_RestorePasswordDialog> createState() =>
+      _RestorePasswordDialogState();
+}
+
+class _RestorePasswordDialogState extends State<_RestorePasswordDialog> {
+  final TextEditingController _field = TextEditingController();
+
+  @override
+  void dispose() {
+    _field.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Password for this backup'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(widget.fileName),
+          const SizedBox(height: 16),
+          const Text(
+            'The restored vault will keep this password. You can change it '
+            'afterwards from Settings.',
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            key: const Key('restore-password'),
+            controller: _field,
+            obscureText: true,
+            autofocus: true,
+            decoration: const InputDecoration(
+              labelText: 'Backup password',
+              border: OutlineInputBorder(),
+            ),
+            onSubmitted: (String value) => Navigator.of(context).pop(value),
+          ),
+        ],
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(_field.text),
+          child: const Text('Restore'),
+        ),
+      ],
     );
   }
 }

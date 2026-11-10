@@ -160,7 +160,8 @@ void main() {
     test('an entry deleted for good on one device does not come back', () {
       final VaultItem gone = item('Old', minute: 0, id: idA);
       final VaultData withIt = vault(items: <VaultItem>[gone]);
-      final VaultData purged = withIt.trashItem(gone.id, now: at(10))
+      final VaultData purged = withIt
+          .trashItem(gone.id, now: at(10))
           .purgeItem(gone.id, now: at(20));
 
       expect(purged.items, isEmpty);
@@ -215,9 +216,8 @@ void main() {
 
     test('a trashed entry still syncs as trashed, not as missing', () {
       final VaultItem it = item('Bank', minute: 0, id: idA);
-      final VaultData trashed = vault(
-        items: <VaultItem>[it],
-      ).trashItem(it.id, now: at(10));
+      final VaultData trashed = vault(items: <VaultItem>[it])
+          .trashItem(it.id, now: at(10));
 
       final MergeOutcome result = mergeOf(
         vault(items: <VaultItem>[it]),
@@ -268,10 +268,7 @@ void main() {
         items: <VaultItem>[inside],
         folders: <Folder>[folder],
       );
-      final VaultData deleted = withFolder.deleteFolder(
-        folderId,
-        now: at(30),
-      );
+      final VaultData deleted = withFolder.deleteFolder(folderId, now: at(30));
 
       final MergeOutcome result = mergeOf(withFolder, deleted);
       expect(result.merged.folders, isEmpty);
@@ -352,7 +349,12 @@ void main() {
           item('Only mine', minute: 5),
         ],
         folders: <Folder>[
-          Folder(id: folderId, name: 'Mine', createdAt: at(0), updatedAt: at(1)),
+          Folder(
+            id: folderId,
+            name: 'Mine',
+            createdAt: at(0),
+            updatedAt: at(1),
+          ),
         ],
         settings: const VaultSettings(autoLockMinutes: 5),
         settingsAt: at(3),
@@ -381,7 +383,12 @@ void main() {
       // The nastiest tie: same entry, same change time, different contents.
       // Without a symmetric tiebreak the two devices would disagree for ever.
       final VaultItem mine = item('Bank', minute: 10, password: 'aaa', id: idA);
-      final VaultItem theirs = item('Bank', minute: 10, password: 'zzz', id: idA);
+      final VaultItem theirs = item(
+        'Bank',
+        minute: 10,
+        password: 'zzz',
+        id: idA,
+      );
       final VaultData a = vault(items: <VaultItem>[mine]);
       final VaultData b = vault(items: <VaultItem>[theirs]);
 
@@ -489,9 +496,7 @@ void main() {
   group('the merged payload', () {
     test('is written at the current schema version', () {
       final MergeOutcome result = mergeOf(VaultData.empty, VaultData.empty);
-      final VaultDataDecoding back = VaultData.decode(
-        result.merged.encode(),
-      );
+      final VaultDataDecoding back = VaultData.decode(result.merged.encode());
       expect(back.data.schemaVersion, VaultData.currentSchemaVersion);
       expect(back.hadLosses, isFalse);
     });

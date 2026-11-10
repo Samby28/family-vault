@@ -5,8 +5,10 @@ import '../crypto/sodium_crypto_service.dart';
 import '../features/home/home_shell.dart';
 import '../features/onboarding/create_vault_screen.dart';
 import '../features/onboarding/unlock_screen.dart';
+import '../platform/file_transfer.dart';
 import '../vault/vault_repository.dart';
 import 'build_info.dart';
+import 'file_transfer_scope.dart';
 import 'session_scope.dart';
 import 'theme.dart';
 import 'vault_session.dart';
@@ -17,11 +19,19 @@ import 'vault_session.dart';
 /// finding somewhere to keep the vault. Both happen here, once, and a failure
 /// is reported plainly rather than leaving a blank screen.
 class FamilyVaultApp extends StatefulWidget {
-  const FamilyVaultApp({super.key, this.sessionOverride});
+  const FamilyVaultApp({
+    super.key,
+    this.sessionOverride,
+    this.fileTransferOverride,
+  });
 
   /// Replaces the real session. For tests and for the web demonstration, so
   /// neither has to initialise libsodium or touch a real vault file.
   final VaultSession? sessionOverride;
+
+  /// Replaces the real file picker, so a test can answer a save or open
+  /// dialog that it otherwise could not.
+  final FileTransfer? fileTransferOverride;
 
   @override
   State<FamilyVaultApp> createState() => _FamilyVaultAppState();
@@ -96,7 +106,10 @@ class _FamilyVaultAppState extends State<FamilyVaultApp> {
     if (session == null) {
       return app;
     }
-    return SessionScope(session: session, child: app);
+    return FileTransferScope(
+      transfer: widget.fileTransferOverride ?? const PlatformFileTransfer(),
+      child: SessionScope(session: session, child: app),
+    );
   }
 
   Widget _buildHome() {

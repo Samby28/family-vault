@@ -43,6 +43,7 @@ enum AppSection {
     'Password Health',
   ),
   trash(Icons.delete_outline, Icons.delete, 'Trash'),
+  backup(Icons.backup_outlined, Icons.backup, 'Backup & Transfer'),
   settings(Icons.settings_outlined, Icons.settings, 'Settings');
 
   const AppSection(this.icon, this.selectedIcon, this.label, {this.itemType});

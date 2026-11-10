@@ -356,9 +356,8 @@ abstract final class VaultMerge {
     if (mine.isAfter(theirs)) {
       return false;
     }
-    return jsonEncode(theirSettings.toJson()).compareTo(
-          jsonEncode(mineSettings.toJson()),
-        ) <
+    return jsonEncode(theirSettings.toJson())
+            .compareTo(jsonEncode(mineSettings.toJson())) <
         0;
   }
 

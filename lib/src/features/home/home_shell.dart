@@ -12,6 +12,7 @@ import '../health/health_view.dart';
 import '../items/item_editor_screen.dart';
 import '../items/item_list_view.dart';
 import '../settings/settings_view.dart';
+import '../transfer/backup_view.dart';
 import '../trash/trash_view.dart';
 import 'dashboard_view.dart';
 
@@ -197,6 +198,7 @@ class _HomeShellState extends State<HomeShell> {
       AppSection.authenticator => const AuthenticatorView(),
       AppSection.health => const HealthView(),
       AppSection.trash => const TrashView(),
+      AppSection.backup => const BackupView(),
       AppSection.settings => const SettingsView(),
     };
   }

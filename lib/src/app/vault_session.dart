@@ -10,6 +10,8 @@ import '../domain/vault_data.dart';
 import '../domain/vault_item.dart';
 import '../domain/vault_settings.dart';
 import '../vault/vault_codec.dart';
+import '../vault/vault_header.dart';
+import '../vault/vault_merge.dart';
 import '../vault/vault_repository.dart';
 
 /// What state the vault is in.
@@ -25,6 +27,45 @@ enum VaultStatus {
 
   /// A vault is open and its contents are in memory.
   unlocked,
+}
+
+/// A backup file that has been decrypted and understood, but not applied.
+///
+/// Holding this means the password was right and the contents parsed. It is
+/// plaintext in memory, so the interface drops it as soon as the user has
+/// either applied it or backed out.
+@immutable
+final class BackupContents {
+  const BackupContents({
+    required this.data,
+    required this.dropped,
+    required this.fileName,
+    required this.formatVersion,
+  });
+
+  /// What the file contained.
+  final VaultData data;
+
+  /// Entries the decoder could not understand and left out. Normally zero;
+  /// anything else is reported, because silently losing an entry during an
+  /// import is exactly the failure a password manager must not have.
+  final int dropped;
+
+  /// The file's name, for showing back to the user.
+  final String fileName;
+
+  /// The vault format version the file was written at.
+  final int formatVersion;
+
+  /// Entries not in the trash.
+  int get liveItems => data.liveItems.length;
+
+  /// Entries in the trash. Counted separately because a backup that is mostly
+  /// trash is a sign the user picked the wrong file.
+  int get trashedItems => data.trashedItems.length;
+
+  /// Folders in the file.
+  int get folders => data.folders.length;
 }
 
 /// Holds the vault's state for the whole application.
@@ -270,6 +311,132 @@ class VaultSession extends ChangeNotifier with WidgetsBindingObserver {
       _fail(failure.message);
       return null;
     }
+  }
+
+  /// Checks [password] against the vault file on disk.
+  ///
+  /// Used before writing a backup protected by the master password: deriving
+  /// a key from a mistyped password would produce a file nobody could ever
+  /// open, and the user would not discover it until the day they needed it.
+  ///
+  /// Deliberately not [unlock]. Unlocking again while already unlocked would
+  /// replace the live keyring and leave the old one unwiped. This derives a
+  /// key, throws it away, and leaves the session untouched.
+  Future<bool> verifyMasterPassword(String password) async {
+    try {
+      final Uint8List file = await repository.read();
+      final OpenedVault opened = _codec.unlock(
+        file: file,
+        masterPassword: password,
+      );
+      opened.keyring.dispose();
+      return true;
+    } on Object {
+      return false;
+    }
+  }
+
+  // ------------------------------------------------------------------ import
+
+  /// Decrypts and decodes a backup file without applying it.
+  ///
+  /// Reading and applying are deliberately two steps. The user is shown what
+  /// the file contains and told what applying it would do before anything
+  /// touches the vault on this device, because both outcomes - a merge and a
+  /// replacement - are hard to undo once the file has been written.
+  ///
+  /// The key derived here is wiped before this returns: it was needed only to
+  /// read the file, and the merged result is saved under the vault's own key.
+  Future<BackupContents?> readBackup({
+    required Uint8List file,
+    required String password,
+    String fileName = 'backup',
+  }) async {
+    _lastError = null;
+    try {
+      final VaultHeader header = _codec.inspect(file);
+      final Uint8List payload = _codec.open(
+        file: file,
+        masterPassword: password,
+      );
+      final VaultDataDecoding decoded = VaultData.decode(payload);
+      notifyListeners();
+      return BackupContents(
+        data: decoded.data,
+        dropped: decoded.droppedItems + decoded.droppedFolders,
+        fileName: fileName,
+        formatVersion: header.formatVersion,
+      );
+    } on VaultFailure catch (failure) {
+      _fail(failure.message);
+      return null;
+    } on FormatException {
+      _fail('That file is not a Family Vault backup.');
+      return null;
+    }
+  }
+
+  /// Merges a backup into the open vault, entry by entry, and saves.
+  ///
+  /// Nothing is overwritten wholesale: for each entry the more recent change
+  /// wins, and an entry only disappears if the backup records that it was
+  /// deleted for good. Returns the outcome so the interface can report what
+  /// changed, or null if the merge could not be saved.
+  Future<MergeOutcome?> mergeBackup(BackupContents backup) async {
+    final VaultData? current = _data;
+    if (current == null) {
+      _fail('Unlock the vault before importing into it.');
+      return null;
+    }
+    final MergeOutcome outcome = VaultMerge.merge(
+      local: current,
+      other: backup.data,
+    );
+    if (!outcome.hadChanges) {
+      return outcome;
+    }
+    final bool saved = await _mutate((VaultData _) => outcome.merged);
+    return saved ? outcome : null;
+  }
+
+  /// Creates this device's vault from a backup file.
+  ///
+  /// For a new or reset device, where there is nothing to merge with. The new
+  /// vault is protected by the backup's own password, which the user already
+  /// knows; they can change it afterwards from Settings. Refuses if a vault
+  /// already exists, so this can never silently replace one.
+  Future<bool> createFromBackup({
+    required Uint8List file,
+    required String password,
+  }) async {
+    if (await repository.exists()) {
+      _fail(
+        'A vault already exists on this device. Import into it instead, or '
+        'delete it first.',
+      );
+      return false;
+    }
+    final BackupContents? backup = await readBackup(
+      file: file,
+      password: password,
+    );
+    if (backup == null) {
+      return false;
+    }
+    return _guard(() async {
+      final VaultKeyring keyring = _codec.createKeyring(
+        masterPassword: password,
+      );
+      await repository.write(
+        _codec.sealWith(keyring: keyring, payload: backup.data.encode()),
+      );
+      _keyring = keyring;
+      _data = backup.data;
+      _droppedOnOpen = backup.dropped;
+      _status = VaultStatus.unlocked;
+      _restartLockTimer();
+      return true;
+    });
   }
 
   // --------------------------------------------------------------- clipboard
