@@ -30,7 +30,8 @@ The encrypted vault works and can be used for real passwords, and as of 10 Nov
 | Android Keystore / Windows Hello device key | Not implemented |
 | Android autofill | Not implemented |
 | CSV import from Chrome, Bitwarden, KeePass | Not implemented |
-| Automatic cloud-drive synchronisation | Partly: manual export/import works and merges safely both ways; nothing watches a shared folder yet |
+| Sync through a shared folder | **Working** — point both devices at the same folder and press Sync now |
+| Sync that runs on its own | Not implemented: nothing watches the folder and nothing runs on a schedule |
 | Optional key file or hardware key | Not implemented — Phase 2 |
 | Printable recovery sheet | Not implemented — Phase 2 |
 | Item history, custom fields, attachments | Not implemented — Phase 2 |
@@ -40,12 +41,23 @@ The encrypted vault works and can be used for real passwords, and as of 10 Nov
 Two consequences the user needs to know, both stated in the app and in the
 release notes:
 
-**Syncing is manual.** Each device holds its own vault file. To bring two devices
-into step, export a backup on one and import it on the other, then do the same in
-the other direction. The import merges entry by entry and keeps whichever side
-changed each entry more recently, so doing it both ways leaves both devices
-holding the same thing, and doing it twice changes nothing the second time.
-Nothing happens on its own: if nobody exports, nothing moves.
+**Syncing happens when you press the button.** Point both devices at one shared
+folder and press Sync now on each. The merge keeps whichever side changed an
+entry more recently, so pressing it on both leaves both devices holding the same
+thing, and pressing it again changes nothing. But nothing watches the folder and
+nothing runs on a schedule: if nobody presses Sync now, nothing moves.
+
+**Setting sync up needs one manual transfer.** The second device can only read
+the first device's files if it was set up from the first device's vault — make a
+backup there, import it on the second device, then choose the shared folder on
+both. This is not an arbitrary step: the key that protects the shared files lives
+inside the encrypted vault, so the only way to pass it across is to pass the
+vault across. See `docs/decisions-and-risks.md`, D-013.
+
+**The shared folder is a folder, nothing more.** The app has no account with
+Google, Microsoft or Dropbox and talks to none of them. It reads and writes files
+in a folder you choose; whatever already keeps that folder in step does the
+moving, and it only ever sees encrypted files.
 
 **Take a backup.** The app cannot recover a vault from a lost device on its own.
 A backup file on a cloud drive or a USB stick is the only thing standing between

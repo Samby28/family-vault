@@ -18,7 +18,94 @@ tests covering it pass in CI. A screen that renders is not a completed feature.
 | 3 | Vault interface: folders, logins, notes, cards, identities, generator, search, lock screen, trash | **COMPLETED** — v0.3.0, run 42652258834 |
 | 4 | TOTP authenticator and password-health reporting | **COMPLETED** — RFC vectors asserted |
 | 5 | Android autofill integration | NOT STARTED |
-| 6 | Encrypted cloud-drive synchronisation and Phase 2 integrations | **IN PROGRESS** — backup, restore and a tested per-item merge are done; the automatic shared-folder watch is not |
+| 6 | Encrypted cloud-drive synchronisation and Phase 2 integrations | **IN PROGRESS** — backup, restore, a tested per-item merge and shared-folder sync are done; a background or scheduled sync is not |
+
+---
+
+## 2026-11-10 — Shared-folder sync, with no provider in sight
+
+**Status: two devices keep each other in step.** CI run `42800987845`: analyser
+clean, **371 tests pass**, up from 319.
+
+A folder both devices can reach, and nothing else. No account, no sign-in, no
+API key, no SDK, no paid tier — and nothing in this codebase can tell whether
+the folder is Google Drive, OneDrive, Dropbox, Syncthing, a network share or a
+USB stick. That is also the strongest available statement about what the
+provider learns: it moves opaque files.
+
+Each device writes one file holding its own copy of the vault. A sync reads
+every **other** device's file, merges them all in through `VaultMerge`, then
+writes its own file back carrying the merged result — so a third device picks
+up the first through the second without the two ever meeting directly.
+
+### The problem that shaped the design
+
+The session deliberately never keeps the master password. A Dart `String`
+cannot be wiped, so the password is used once and discarded, leaving only a key
+derived with **this vault file's own salt**. Another device's file has a
+different salt, so that key cannot open it, and nothing else in memory can.
+
+| Option | Rejected because |
+|---|---|
+| Prompt for the master password at every sync | Defeats the purpose, and trains the user to type their master password at a prompt that appears on a schedule |
+| Require both devices to share a master password | A restriction the rest of the design does not impose, and it fails silently the moment one device's password changes |
+| **Chosen: a sync secret inside the encrypted payload** | 32 bytes of randomness, held as hex so it is used wherever a password is expected — the existing vetted `seal`/`open` path, no new format, no new primitive |
+
+The secret reaches the second device through the one manual backup-and-import
+that sets sharing up, and never through the shared folder. It is not a second
+way into the vault: the vault file is still sealed with a key from the master
+password. Recorded as D-013; the provider-free folder choice as D-014.
+
+### Three faults the tests exist to prevent
+
+Each would be quiet damage rather than a visible error, which is what makes
+them worth tests rather than care:
+
+| Fault | What it would do |
+|---|---|
+| A device reads **its own** file back | Merges with a stale copy of itself: reports changes that never happened, and resurrects anything deleted since that file was written |
+| One bad file stops the whole sync | A sync client caught mid-upload is the normal case, so sync would fail most of the time. An unreadable file is reported by name and the rest merge anyway |
+| The merged vault is sealed with the **sync secret** | Locks the user out of their own vault with a 64-character string they have never seen. A test locks and re-unlocks with both, asserting the secret fails and the master password works |
+
+Device names are slugged into file names, with tests that `***`,
+`../../etc/passwd` and `..\..\windows` cannot produce an empty name or a path
+that escapes the folder.
+
+### Where each setting lives, and why
+
+| Setting | Where | Why not the other place |
+|---|---|---|
+| Sync secret | Inside the encrypted payload | Must travel with the vault, and must never be written in the clear |
+| Folder path, device name | A small plaintext `device.json` beside the vault | A path is meaningless on the other device, and a device name exists precisely to tell the two apart — in the vault, each device would overwrite the other's at every merge |
+
+`device.json` is the only file this application writes in the clear, so a test
+states what it may contain: those three values and nothing resembling a
+password, a key or the sync secret.
+
+### Build failures, and what each turned out to be
+
+| Run | Failure | Cause |
+|---|---|---|
+| 42799506133 | Formatter, 8 files | Diff applied from the `if: failure()` step |
+| 42800239492 | `prefer_initializing_formals` on `VaultSync._codec` and `_folder` | The same unsatisfiable lint as `Folder._updatedAt` before it: a named parameter may not begin with an underscore. Fields made public, with the note `VaultSession.repository` already carries |
+| 42800239492 | `unnecessary_import` of `dart:typed_data` | `package:flutter/foundation.dart` exports `Uint8List`; `material.dart` does not, which is why `backup_view.dart` legitimately imports it and `vault_sync.dart` must not |
+
+And one self-inflicted: a blanket replace of `_codec.` with `codec.` also
+rewrote `import 'vault_codec.dart'` into `import 'vaultcodec.dart'`. The second
+time that exact trap has caught me in this project. The structural check
+(import resolution plus delimiter balance) caught it before the push, which is
+the only reason it cost nothing.
+
+### Not built, and not claimed
+
+- **Nothing runs in the background.** A sync happens when the button is
+  pressed. A folder-watching or scheduled sync would change *when* a merge
+  runs, not what one does.
+- No conflict history. The merge keeps the more recent edit and reports how
+  many entries that applied to; the older version is gone.
+- Still outstanding from before: biometric unlock, Android screenshot
+  blocking, device-keystore key wrapping, Android autofill, CSV import,
+  Windows installer.
 
 ---
 

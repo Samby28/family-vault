@@ -238,6 +238,70 @@ cloud drive.
 
 ---
 
+### D-013 · The vault carries a sync secret; exchange files are not sealed with the master password
+
+**Decision.** Each vault holds a `syncSecret`: 32 bytes from the cryptographic random
+generator, stored inside the encrypted payload as 64 hexadecimal characters. The files
+devices place in a shared folder are sealed with it. The vault file itself is still
+sealed with a key derived from the master password; the secret is not a second way in.
+
+**Why not the master password.** The session deliberately never keeps it (see the class
+comment on `VaultSession`): a Dart `String` cannot be wiped, so the password is used once
+and discarded, leaving only a key derived with **this vault file's own salt**. Another
+device's file has a different salt, so that key cannot open it, and nothing else in
+memory can either. Two ways out of that, both rejected:
+
+| Rejected | Why |
+|---|---|
+| Prompt for the master password at every sync | Defeats the purpose of sync, and trains the user to type their master password in response to a prompt that appears on a schedule |
+| Require both devices to share a master password | A constraint the rest of the design does not impose — two devices are otherwise fully independent — and it fails silently and confusingly the moment one device's password is changed |
+
+**Why a hex string rather than a raw key.** Using the secret wherever a password is
+expected means `seal` and `open` are the existing, vetted calls, with no new file format,
+no key-wrapping scheme and no primitive written here. Running Argon2id over 256 bits of
+randomness is wasted work, but it is work done twice per sync on a user action, and it
+buys an unchanged crypto path — see MP's instruction never to implement cryptographic
+primitives.
+
+**How the second device gets it.** Through the one manual backup-and-import that sets
+sharing up: the secret is inside the payload, so it travels with the vault. It is never
+written to the shared folder in the clear and never leaves the device any other way.
+This is why the interface states plainly that the other device must be set up from this
+one — a consequence worth naming rather than leaving to be discovered as a mysterious
+"could not open" message.
+
+**The failure mode, and why it is reported as two possibilities.** A file sealed with a
+different secret and a file half-written by the sync client are indistinguishable: both
+fail authentication. The report offers both explanations rather than accusing the user of
+a setup mistake that may not have happened.
+
+---
+
+### D-014 · The shared folder is a folder, and the app knows nothing about the provider
+
+**Decision.** Sync works through any directory both devices can reach. There is no
+provider integration, no OAuth, no API key, no SDK. The user picks a folder with the
+platform's own folder picker — `getDirectoryPath`, which `file_selector_android`
+**does** implement, unlike `getSaveLocation` (D-012).
+
+**Why.** It satisfies MP's ban on paid services and mandatory subscriptions by not
+having a service at all, and it works with Google Drive, OneDrive, Dropbox, Syncthing, a
+network share or a USB stick without a line of code per provider. Nothing in this
+codebase can tell which is in use, which is also the strongest possible statement about
+what the provider learns: it moves opaque files.
+
+**The cost, stated rather than hidden.** Nothing runs in the background. A sync happens
+when the button is pressed. A folder-watching or scheduled sync is a later addition; it
+would change when a merge runs, not what one does.
+
+**Each device writes the merged result, not just its own changes.** A device reads every
+other file, merges them all, then writes its own file carrying the result. So a third
+device picks up the first through the second without the two ever meeting — tested in
+`vault_sync_test.dart` — at the cost of each file growing to hold the whole vault, which
+it does anyway.
+
+---
+
 ## Part 2 — Risk register
 
 Likelihood and impact are rated Low, Medium or High. Risks are ordered by current

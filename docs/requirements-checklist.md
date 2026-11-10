@@ -201,9 +201,9 @@ These override convenience at every decision point.
 
 | ID | Requirement | Source | Status |
 |---|---|---|---|
-| C1 | Encrypted vault file synchronised through a cloud drive | MP 9.1, FI 1 | IN PROGRESS (manual export/import works and merges correctly; the automatic shared-folder watch is not built) |
+| C1 | Encrypted vault file synchronised through a cloud drive | MP 9.1, FI 1 | COMPLETED (shared-folder sync; the user presses Sync now — nothing runs in the background) |
 | C2 | Provider-independent sync architecture isolated from the crypto core | MP 9.1 | COMPLETED (VaultMerge is pure Dart with no file, network or platform dependency; transfer is a FileTransfer interface) |
-| C3 | Upload, download, manual and automatic sync | MP 9.1 | IN PROGRESS (manual both ways; automatic not built) |
+| C3 | Upload, download, manual and automatic sync | MP 9.1 | IN PROGRESS (a single Sync now reads every other device and writes this one's file back; a background or scheduled sync is not built) |
 | C4 | Version tracking, conflict detection and resolution | MP 9.1 | NOT STARTED |
 | C5 | Never overwrite a newer vault with an older one | MP 9.1 | NOT STARTED |
 | C6 | Recovery from interrupted transfers; integrity verification | MP 9.1 | NOT STARTED |

@@ -237,6 +237,51 @@ lost by importing.
 The one thing to be careful of: there is no "undo last import". Read the box
 that appears before you press Merge.
 
+### Keeping two devices in step through a shared folder
+
+Rather than carrying a file back and forth every time, you can point both
+devices at one folder and press a button.
+
+**The folder can be anything both devices can see** — your Google Drive,
+OneDrive or Dropbox folder *on the device*, a folder on a network share, even a
+USB stick you move between two machines. The app has no account with any of
+those services and never talks to them. It writes an encrypted file into the
+folder; whatever already keeps that folder in step does the moving, and only
+ever sees a file it cannot read.
+
+**Set it up in this order.** It matters.
+
+1. On the device that **already holds your passwords**, open Backup & Transfer,
+   press **Choose a shared folder**, pick the folder and give the device a name
+   like "laptop". Press **Sync now**.
+2. On the **same** device, make a backup (above) and get it to the other device.
+3. On the **other** device, import that backup.
+4. Now on the other device, choose the **same folder** and name it something
+   else, like "phone". Press **Sync now**.
+
+From then on, pressing **Sync now** on either device is enough.
+
+**Why step 2 and 3 cannot be skipped.** The key that protects the files in the
+shared folder lives *inside* your encrypted vault. The only way to get it onto
+the second device is to get your vault onto the second device — which is what
+that one import does. Without it, the second device will say it cannot open the
+first one's file, and it will be right.
+
+**What you will see.** After a sync: how many devices it found and what changed,
+for example *"Synced with 1 device: 3 added, 1 updated."* If a file could not be
+used, it is named and the rest are merged anyway — the usual cause is that your
+cloud app was still uploading it, and it will work next time.
+
+**It only runs when you press the button.** Nothing happens in the background,
+and nothing runs on a schedule. If neither of you presses Sync now, nothing
+moves.
+
+**Stop sharing on this device** unhooks that one device. Your vault there is
+untouched, and the files already in the folder are left alone, because your
+other device may still be using them.
+
+---
+
 ### Setting up a new or replaced phone
 
 On a fresh device, the first screen offers **Restore from a backup file
@@ -254,8 +299,8 @@ you already have, use **Import** on the Backup & Transfer screen instead.
 
 Things this version does **not** do, so nobody is caught out:
 
-- **No automatic syncing.** You export on one device and import on the other,
-  as above. Nothing moves on its own.
+- **No automatic syncing.** Sync runs when you press Sync now. Nothing watches
+  the folder and nothing runs on a schedule.
 - **No autofill on Android.** Copy and paste for now.
 - **No importing** from Chrome, Bitwarden or anywhere else. Entries are typed
   in by hand.

@@ -7,18 +7,21 @@ Your passwords are encrypted on your own device with a key derived from your
 master password. There is no server, no account to create, and nothing that any
 third party — including the people who built this — can decrypt.
 
-> **Project status: Phase 1 working — v0.4.0.** The encrypted vault is built and
-> usable on Android and Windows. **319 tests pass**, including security tests
+> **Project status: Phase 1 working — v0.5.0.** The encrypted vault is built and
+> usable on Android and Windows. **371 tests pass**, including security tests
 > against real libsodium. You can create a vault, save logins, notes, cards and
 > identities, organise them in folders, search, generate passwords, hold
-> two-factor codes, check password health, take an encrypted backup, and move
-> entries between two devices through a per-entry merge that is tested for
-> convergence and idempotence.
+> two-factor codes, check password health, take an encrypted backup, and keep
+> two devices in step through any folder they both see — merged entry by entry,
+> with convergence and idempotence asserted on random vault pairs.
 >
-> **Not yet built:** automatic syncing — moving entries between devices is
-> manual, an export on one and an import on the other, with nothing watching a
-> shared folder yet. Also Android autofill, importing from another password
-> manager, a recovery sheet, and fingerprint unlock. See
+> **No cloud account of any kind.** Sync is a folder: point both devices at your
+> own Drive, OneDrive or Dropbox folder, a network share or a USB stick. This
+> code has no integration with any provider and cannot tell which one is in use.
+>
+> **Not yet built:** sync runs when you press the button — nothing watches the
+> folder and nothing runs on a schedule. Also Android autofill, importing from
+> another password manager, a recovery sheet, and fingerprint unlock. See
 > [`docs/known-limitations.md`](docs/known-limitations.md).
 >
 > New here? [Installing](docs/installing.md) · [How to use it](docs/user-guide.md)

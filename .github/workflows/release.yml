@@ -132,23 +132,37 @@ jobs:
           your other accounts, see which of your passwords need attention, and
           lock the vault by hand, on a timer, or when the app leaves the screen.
 
-          **New: backup, restore, and moving entries between devices.** Open
-          **Backup & Transfer** to write an encrypted copy of your vault - safe
-          to keep on a cloud drive or a USB stick, because it is useless
-          without its password. Import a backup from your other device and the
-          two vaults are merged entry by entry: whichever side changed an entry
+          **Backup and restore.** Open **Backup & Transfer** to write an
+          encrypted copy of your vault - safe to keep on a cloud drive or a USB
+          stick, because it is useless without its password. A replaced phone
+          can be set up straight from a backup: the first screen offers
+          "Restore from a backup file instead".
+
+          **New: keep two devices in step through a shared folder.** Point both
+          devices at the same folder - your Google Drive, OneDrive or Dropbox
+          folder on the device, a network share, even a USB stick - and press
+          **Sync now**. There is no account and no sign-in: this app never
+          talks to the cloud service. Whatever already keeps that folder in
+          step does the moving, and only ever sees encrypted files.
+
+          Vaults are merged entry by entry: whichever side changed an entry
           more recently wins, entries you deleted stay deleted, and nothing you
-          still have on this device can be lost. Importing the same file twice
-          is harmless. A replaced phone can be set up straight from a backup:
-          the first screen offers "Restore from a backup file instead".
+          still have on a device can be lost by syncing. Syncing twice changes
+          nothing the second time.
+
+          Setting it up takes one manual step, and it is not optional: make a
+          backup on the device that already holds your passwords, import it on
+          the other device, then choose the shared folder on both. The key that
+          protects the shared files lives inside your encrypted vault, so the
+          only way to get it to the second device is to get your vault there.
+          `docs/user-guide.md` walks through it.
 
           ### Not in this version
 
-          Moving entries between devices is manual - you export on one and
-          import on the other, both ways. Nothing watches a shared folder yet.
-          Also missing: autofill on Android, importing from another password
-          manager, and a printable recovery sheet. See
-          `docs/known-limitations.md`.
+          Sync runs when you press the button. Nothing watches the folder and
+          nothing runs on a schedule. Also missing: autofill on Android,
+          importing from another password manager, and a printable recovery
+          sheet. See `docs/known-limitations.md`.
 
           ### Downloads
 
