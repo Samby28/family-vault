@@ -12,7 +12,8 @@ const String appVersion = '0.5.0';
 
 /// Development stage currently delivered. Used by the shell so the interface
 /// never implies a feature exists before it does.
-const String appStage = 'Phase 1 - encrypted vault with backup and shared-folder sync';
+const String appStage =
+    'Phase 1 - encrypted vault with backup and shared-folder sync';
 
 /// True only in the public web demonstration build, which is compiled with
 /// `--dart-define=FAMILY_VAULT_DEMO=true`.
