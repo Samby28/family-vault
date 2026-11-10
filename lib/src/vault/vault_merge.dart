@@ -344,22 +344,43 @@ abstract final class VaultMerge {
     final VaultSettings theirSettings = other.settings;
     final DateTime? mine = local.settingsUpdatedAt;
     final DateTime? theirs = other.settingsUpdatedAt;
+
+    // Neither side has ever stamped its settings - both files were written
+    // before schema 2, or neither user has changed a setting. There is no
+    // clock to compare, so the tiebreak has to decide, and it has to be the
+    // SAME tiebreak on both devices. Returning false here (keep mine) looks
+    // harmless and is the bug the convergence test caught: each device would
+    // keep its own settings for ever and the two would never agree.
+    if (mine == null && theirs == null) {
+      return _otherSettingsSortFirst(mineSettings, theirSettings);
+    }
+
+    // One side has a stamp and the other does not: the stamped one wins. This
+    // is symmetric, because the test is "does the other side have a stamp
+    // when I do not", which only one device can answer yes to.
     if (theirs == null) {
       return false;
     }
     if (mine == null) {
       return true;
     }
+
     if (theirs.isAfter(mine)) {
       return true;
     }
     if (mine.isAfter(theirs)) {
       return false;
     }
-    return jsonEncode(theirSettings.toJson())
-            .compareTo(jsonEncode(mineSettings.toJson())) <
-        0;
+    return _otherSettingsSortFirst(mineSettings, theirSettings);
   }
+
+  /// Breaks a settings tie the same way on both devices.
+  ///
+  /// Comparing the encoded form is arbitrary but symmetric, which is the only
+  /// property that matters: an arbitrary rule both devices apply leaves them
+  /// agreeing, where a sensible rule each applies to its own side does not.
+  static bool _otherSettingsSortFirst(VaultSettings mine, VaultSettings other) =>
+      jsonEncode(other.toJson()).compareTo(jsonEncode(mine.toJson())) < 0;
 
   /// True when two versions of an entry differ in any field.
   ///

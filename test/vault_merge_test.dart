@@ -337,6 +337,25 @@ void main() {
       expect(result.merged.settings.autoLockMinutes, 1);
       expect(result.settingsTakenFromOther, isFalse);
     });
+
+    test('two unstamped sides still agree on one answer', () {
+      // Both files predate schema 2, or neither user ever changed a setting,
+      // so there is no clock to compare. Keeping "mine" in that case looks
+      // harmless and is not: each device keeps its own and they never agree.
+      // This is the case the convergence property caught in CI run
+      // 42795423782.
+      final VaultData mine = vault(
+        settings: const VaultSettings(autoLockMinutes: 5),
+      );
+      final VaultData theirs = vault(
+        settings: const VaultSettings(autoLockMinutes: 30),
+      );
+
+      expect(
+        encoded(mergeOf(mine, theirs).merged),
+        encoded(mergeOf(theirs, mine).merged),
+      );
+    });
   });
 
   // ------------------------------------------------- the properties that matter

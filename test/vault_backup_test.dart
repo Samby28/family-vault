@@ -124,14 +124,13 @@ void main() {
           await session.readBackup(file: file, password: 'wrong password here'),
           isNull,
         );
-        expect(session.lastError, isNotNull);
-        expect(
-          session.lastError,
-          isNot(contains('password')),
-          reason:
-              'a message naming the password as the problem tells an attacker '
-              'the file itself is intact',
-        );
+        // The message must leave the two causes indistinguishable. "Wrong
+        // password" would confirm to someone holding a stolen file that the
+        // file itself is intact and worth attacking; "file damaged" would
+        // send an honest user hunting for a corruption that is not there. So
+        // it names both and commits to neither.
+        expect(session.lastError, contains('password may be wrong'));
+        expect(session.lastError, contains('changed or damaged'));
       },
     );
 

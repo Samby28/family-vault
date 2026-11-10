@@ -21,6 +21,7 @@ import '../../app/session_scope.dart';
 import '../../app/vault_session.dart';
 import '../../platform/file_transfer.dart';
 import '../../vault/vault_merge.dart';
+import 'password_prompt.dart';
 
 /// Export and import, on one screen.
 class BackupView extends StatefulWidget {
@@ -289,44 +290,17 @@ class _BackupViewState extends State<BackupView> {
   static String _count(int n, String one, String many) =>
       '$n ${n == 1 ? one : many}';
 
-  Future<String?> _askPassword({required String title, required String hint}) {
-    final TextEditingController field = TextEditingController();
-    return showDialog<String>(
-      context: context,
-      builder: (BuildContext context) => AlertDialog(
-        title: Text(title),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(hint),
-            const SizedBox(height: 16),
-            TextField(
-              key: const Key('transfer-password'),
-              controller: field,
-              obscureText: true,
-              autofocus: true,
-              decoration: const InputDecoration(
-                labelText: 'Password',
-                border: OutlineInputBorder(),
-              ),
-              onSubmitted: (String value) => Navigator.of(context).pop(value),
-            ),
-          ],
-        ),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(field.text),
-            child: const Text('Continue'),
-          ),
-        ],
-      ),
-    ).whenComplete(field.dispose);
-  }
+  Future<String?> _askPassword({
+    required String title,
+    required String hint,
+    String? subject,
+  }) => PasswordPrompt.show(
+    context,
+    title: title,
+    explanation: hint,
+    confirmLabel: 'Continue',
+    subject: subject,
+  );
 }
 
 class _ExportCard extends StatelessWidget {

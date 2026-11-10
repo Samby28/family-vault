@@ -7,6 +7,7 @@ import '../../app/vault_session.dart';
 import '../../domain/master_password_strength.dart';
 import '../../domain/password_generator.dart';
 import '../../platform/file_transfer.dart';
+import '../transfer/password_prompt.dart';
 
 /// First-run screen: choose a master password and create the vault.
 ///
@@ -74,10 +75,15 @@ class _CreateVaultScreenState extends State<CreateVaultScreen> {
     if (chosen == null || !mounted) {
       return;
     }
-    final String? password = await showDialog<String>(
-      context: context,
-      builder: (BuildContext context) =>
-          _RestorePasswordDialog(fileName: chosen.name),
+    final String? password = await PasswordPrompt.show(
+      context,
+      title: 'Password for this backup',
+      explanation:
+          'The restored vault will keep this password. You can change it '
+          'afterwards from Settings.',
+      confirmLabel: 'Restore',
+      fieldKey: const Key('restore-password'),
+      subject: chosen.name,
     );
     if (password == null || password.isEmpty || !mounted) {
       return;
@@ -350,67 +356,3 @@ class _ErrorBanner extends StatelessWidget {
   }
 }
 
-/// Asks for the password that protects a backup file.
-///
-/// A widget of its own rather than an inline builder so its controller is
-/// disposed when the dialog closes instead of being left to the garbage
-/// collector with a password still in it.
-class _RestorePasswordDialog extends StatefulWidget {
-  const _RestorePasswordDialog({required this.fileName});
-
-  final String fileName;
-
-  @override
-  State<_RestorePasswordDialog> createState() => _RestorePasswordDialogState();
-}
-
-class _RestorePasswordDialogState extends State<_RestorePasswordDialog> {
-  final TextEditingController _field = TextEditingController();
-
-  @override
-  void dispose() {
-    _field.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Password for this backup'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(widget.fileName),
-          const SizedBox(height: 16),
-          const Text(
-            'The restored vault will keep this password. You can change it '
-            'afterwards from Settings.',
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            key: const Key('restore-password'),
-            controller: _field,
-            obscureText: true,
-            autofocus: true,
-            decoration: const InputDecoration(
-              labelText: 'Backup password',
-              border: OutlineInputBorder(),
-            ),
-            onSubmitted: (String value) => Navigator.of(context).pop(value),
-          ),
-        ],
-      ),
-      actions: <Widget>[
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.of(context).pop(_field.text),
-          child: const Text('Restore'),
-        ),
-      ],
-    );
-  }
-}
