@@ -355,4 +355,3 @@ class _ErrorBanner extends StatelessWidget {
     );
   }
 }
-

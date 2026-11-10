@@ -107,10 +107,7 @@ class _PasswordPromptState extends State<PasswordPrompt> {
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancel'),
         ),
-        FilledButton(
-          onPressed: _accept,
-          child: Text(widget.confirmLabel),
-        ),
+        FilledButton(onPressed: _accept, child: Text(widget.confirmLabel)),
       ],
     );
   }

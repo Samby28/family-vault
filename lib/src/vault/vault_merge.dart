@@ -379,8 +379,10 @@ abstract final class VaultMerge {
   /// Comparing the encoded form is arbitrary but symmetric, which is the only
   /// property that matters: an arbitrary rule both devices apply leaves them
   /// agreeing, where a sensible rule each applies to its own side does not.
-  static bool _otherSettingsSortFirst(VaultSettings mine, VaultSettings other) =>
-      jsonEncode(other.toJson()).compareTo(jsonEncode(mine.toJson())) < 0;
+  static bool _otherSettingsSortFirst(
+    VaultSettings mine,
+    VaultSettings other,
+  ) => jsonEncode(other.toJson()).compareTo(jsonEncode(mine.toJson())) < 0;
 
   /// True when two versions of an entry differ in any field.
   ///
