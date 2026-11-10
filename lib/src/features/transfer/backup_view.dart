@@ -16,6 +16,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
+import '../../app/build_info.dart';
 import '../../app/file_transfer_scope.dart';
 import '../../app/session_scope.dart';
 import '../../app/vault_session.dart';
@@ -78,8 +79,14 @@ class _BackupViewState extends State<BackupView> {
           ),
         ],
         const SizedBox(height: 16),
-        const SyncCard(),
-        const SizedBox(height: 16),
+        // The public demonstration runs in a browser, which gives a page
+        // access to files the user picks but never to a folder it can list
+        // and write to later. Showing a sync card that cannot work would be
+        // worse than not showing one.
+        if (!isDemoBuild) ...<Widget>[
+          const SyncCard(),
+          const SizedBox(height: 16),
+        ],
         const _TransferAdvice(),
       ],
     );

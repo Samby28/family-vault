@@ -137,6 +137,30 @@ final class PlatformFileTransfer implements FileTransfer {
     required String suggestedName,
     required Uint8List bytes,
   }) async {
+    if (kIsWeb) {
+      // No file system to stage through, so the bytes are shared straight
+      // from memory. share_plus falls back to a browser download when the
+      // browser has no share target, which is what the public demonstration
+      // build needs.
+      final ShareResult result = await SharePlus.instance.share(
+        ShareParams(
+          files: <XFile>[
+            XFile.fromData(
+              bytes,
+              name: suggestedName,
+              mimeType: 'application/octet-stream',
+            ),
+          ],
+          fileNameOverrides: <String>[suggestedName],
+          subject: suggestedName,
+          downloadFallbackEnabled: true,
+        ),
+      );
+      return result.status == ShareResultStatus.dismissed
+          ? const SaveResult.cancelled()
+          : const SaveResult.shared();
+    }
+
     if (hasSaveDialog) {
       final FileSaveLocation? where = await getSaveLocation(
         suggestedName: suggestedName,
@@ -192,6 +216,11 @@ final class PlatformFileTransfer implements FileTransfer {
     return PickedFile(name: chosen.name, bytes: await chosen.readAsBytes());
   }
 
+  /// Asks the user for a folder.
+  ///
+  /// Returns null on the web, where there is no folder to pick: the browser
+  /// gives a page access to files the user chooses, never to a directory it
+  /// can list and write to later, which is what the shared-folder sync needs.
   @override
-  Future<String?> pickFolder() => getDirectoryPath();
+  Future<String?> pickFolder() async => kIsWeb ? null : getDirectoryPath();
 }

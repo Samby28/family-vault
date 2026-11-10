@@ -273,6 +273,60 @@ void main() {
     });
   });
 
+  group('the shared-folder card', () {
+    appTest('is shown on a normal build', (WidgetTester tester) async {
+      await openBackupScreen(tester);
+      expect(
+        find.text('Keep two devices in step through a shared folder'),
+        findsOneWidget,
+      );
+    });
+
+    appTest('does nothing when no folder is chosen', (
+      WidgetTester tester,
+    ) async {
+      // On the web this is the only outcome: a browser gives a page access to
+      // files the user picks, never to a folder it can list and write to
+      // later.
+      files.nextFolder = null;
+      await openBackupScreen(tester);
+
+      await tapVisible(tester, find.byKey(const Key('sync-choose-folder')));
+
+      expect(find.byKey(const Key('sync-device-name')), findsNothing);
+      expect(session.device.syncConfigured, isFalse);
+    });
+
+    appTest('sets up sharing once a folder and a name are given', (
+      WidgetTester tester,
+    ) async {
+      files.nextFolder = '/shared/FamilyVault';
+      await openBackupScreen(tester);
+
+      await tapVisible(tester, find.byKey(const Key('sync-choose-folder')));
+      await tester.enterText(
+        find.byKey(const Key('sync-device-name')),
+        'laptop',
+      );
+      await tester.pumpAndSettle();
+      await tapVisible(
+        tester,
+        find.widgetWithText(FilledButton, 'Use this name'),
+      );
+
+      expect(session.device.syncFolder, '/shared/FamilyVault');
+      expect(session.device.deviceName, 'laptop');
+      expect(
+        session.data!.syncSecret,
+        isNotNull,
+        reason: 'the sync secret is generated when sharing is set up',
+      );
+      // Setting up runs a sync straight away, which cannot reach a folder
+      // that does not exist, so the failure is reported rather than hidden.
+      expect(find.byKey(const Key('sync-notice')), findsOneWidget);
+    });
+  });
+
   group('restoring on a device with no vault', () {
     appTest('is offered on the setup screen', (WidgetTester tester) async {
       await start(tester);
