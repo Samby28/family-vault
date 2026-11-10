@@ -5,6 +5,7 @@ import 'package:meta/meta.dart';
 
 import '../core/failures.dart';
 import 'folder.dart';
+import 'ids.dart';
 import 'vault_item.dart';
 import 'vault_settings.dart';
 
@@ -19,6 +20,8 @@ final class VaultData {
     this.folders = const <Folder>[],
     this.items = const <VaultItem>[],
     this.settings = const VaultSettings(),
+    this.tombstones = const <Tombstone>[],
+    this.settingsUpdatedAt,
   });
 
   /// Schema version of the payload, separate from the file format version.
@@ -26,7 +29,10 @@ final class VaultData {
   /// The file format describes how bytes are protected; this describes what
   /// the decrypted contents mean. They change for different reasons, so they
   /// are versioned separately.
-  static const int currentSchemaVersion = 1;
+  /// Schema 2 added [tombstones] and [settingsUpdatedAt], both needed to
+  /// merge two devices. A schema 1 payload still reads: it simply has no
+  /// tombstones and no settings timestamp.
+  static const int currentSchemaVersion = 2;
 
   /// An empty vault.
   static const VaultData empty = VaultData();
@@ -42,6 +48,32 @@ final class VaultData {
 
   /// Per-vault preferences.
   final VaultSettings settings;
+
+  /// Records of things deleted for good.
+  ///
+  /// Kept so that a permanent deletion can travel to another device. Without
+  /// them, emptying the trash here and then merging with a device that still
+  /// has those entries would simply bring them all back.
+  final List<Tombstone> tombstones;
+
+  /// When [settings] last changed, or null if they never have.
+  ///
+  /// Settings live in the vault so they follow it between devices, which means
+  /// a merge has to decide whose settings win. This is how.
+  final DateTime? settingsUpdatedAt;
+
+  /// Live tombstones, with ones older than [Tombstone.keepFor] dropped.
+  ///
+  /// They cannot be kept forever or the vault would grow without limit, and
+  /// they cannot be dropped quickly either: a device that has been offline
+  /// longer than this will reintroduce entries that were deleted while it was
+  /// away. [Tombstone.keepFor] is the compromise.
+  List<Tombstone> prunedTombstones({DateTime? now}) {
+    final DateTime at = now ?? DateTime.now();
+    return tombstones
+        .where((Tombstone t) => at.difference(t.purgedAt) <= Tombstone.keepFor)
+        .toList();
+  }
 
   /// Items not in the trash.
   List<VaultItem> get liveItems =>
@@ -157,21 +189,45 @@ final class VaultData {
     return upsertItem(item.copyWith(restore: true, now: now));
   }
 
-  /// Removes an item for good.
-  VaultData purgeItem(String id) =>
-      copyWith(items: items.where((VaultItem i) => i.id != id).toList());
+  /// Removes an item for good, leaving a tombstone behind.
+  VaultData purgeItem(String id, {DateTime? now}) {
+    if (itemById(id) == null) {
+      return this;
+    }
+    return copyWith(
+      items: items.where((VaultItem i) => i.id != id).toList(),
+      tombstones: <Tombstone>[
+        ...tombstones,
+        Tombstone(id: id, purgedAt: now ?? DateTime.now()),
+      ],
+    );
+  }
 
-  /// Empties the trash.
-  VaultData emptyTrash() => copyWith(items: liveItems);
+  /// Empties the trash, leaving a tombstone for each entry removed.
+  VaultData emptyTrash({DateTime? now}) {
+    final DateTime at = now ?? DateTime.now();
+    final List<VaultItem> removed = trashedItems;
+    if (removed.isEmpty) {
+      return this;
+    }
+    return copyWith(
+      items: liveItems,
+      tombstones: <Tombstone>[
+        ...tombstones,
+        for (final VaultItem item in removed)
+          Tombstone(id: item.id, purgedAt: at),
+      ],
+    );
+  }
 
   /// Adds a folder.
   VaultData addFolder(Folder folder) =>
       copyWith(folders: <Folder>[...folders, folder]);
 
   /// Renames a folder.
-  VaultData renameFolder(String id, String name) => copyWith(
+  VaultData renameFolder(String id, String name, {DateTime? now}) => copyWith(
     folders: folders
-        .map((Folder f) => f.id == id ? f.renamed(name) : f)
+        .map((Folder f) => f.id == id ? f.renamed(name, now: now) : f)
         .toList(),
   );
 
@@ -187,33 +243,49 @@ final class VaultData {
               i.folderId == id ? i.copyWith(clearFolder: true, now: now) : i,
         )
         .toList();
+    if (folderById(id) == null) {
+      return this;
+    }
     return copyWith(
       folders: folders.where((Folder f) => f.id != id).toList(),
       items: movedOut,
+      // A deleted folder needs a tombstone too, or another device would
+      // recreate it on the next merge.
+      tombstones: <Tombstone>[
+        ...tombstones,
+        Tombstone(id: id, purgedAt: now ?? DateTime.now()),
+      ],
     );
   }
 
-  /// Replaces the settings.
-  VaultData withSettings(VaultSettings next) => copyWith(settings: next);
+  /// Replaces the settings, stamping when that happened.
+  VaultData withSettings(VaultSettings next, {DateTime? now}) =>
+      copyWith(settings: next, settingsUpdatedAt: now ?? DateTime.now());
 
   /// A copy with the given changes.
   VaultData copyWith({
     List<Folder>? folders,
     List<VaultItem>? items,
     VaultSettings? settings,
+    List<Tombstone>? tombstones,
+    DateTime? settingsUpdatedAt,
   }) => VaultData(
     schemaVersion: schemaVersion,
     folders: folders ?? this.folders,
     items: items ?? this.items,
     settings: settings ?? this.settings,
+    tombstones: tombstones ?? this.tombstones,
+    settingsUpdatedAt: settingsUpdatedAt ?? this.settingsUpdatedAt,
   );
 
   /// Stored form.
   Map<String, Object?> toJson() => <String, Object?>{
-    'schemaVersion': schemaVersion,
+    'schemaVersion': currentSchemaVersion,
     'folders': folders.map((Folder f) => f.toJson()).toList(),
     'items': items.map((VaultItem i) => i.toJson()).toList(),
     'settings': settings.toJson(),
+    'tombstones': tombstones.map((Tombstone t) => t.toJson()).toList(),
+    'settingsUpdatedAt': settingsUpdatedAt?.toUtc().toIso8601String(),
   };
 
   /// Serialises the payload to the bytes that get encrypted.
@@ -288,6 +360,20 @@ final class VaultData {
       }
     }
 
+    final List<Tombstone> tombstones = <Tombstone>[];
+    final Object? rawTombstones = root['tombstones'];
+    if (rawTombstones is List<Object?>) {
+      for (final Object? entry in rawTombstones) {
+        final Tombstone? tombstone = entry is Map<String, Object?>
+            ? Tombstone.fromJson(entry)
+            : null;
+        if (tombstone != null) {
+          tombstones.add(tombstone);
+        }
+      }
+    }
+
+    final Object? rawSettingsStamp = root['settingsUpdatedAt'];
     final Object? rawSettings = root['settings'];
     return VaultDataDecoding(
       data: VaultData(
@@ -296,6 +382,10 @@ final class VaultData {
         settings: rawSettings is Map<String, Object?>
             ? VaultSettings.fromJson(rawSettings)
             : const VaultSettings(),
+        tombstones: tombstones,
+        settingsUpdatedAt: rawSettingsStamp is String
+            ? DateTime.tryParse(rawSettingsStamp)
+            : null,
       ),
       droppedItems: droppedItems,
       droppedFolders: droppedFolders,
@@ -323,4 +413,56 @@ final class VaultDataDecoding {
 
   /// True when something had to be dropped, so the user can be told.
   bool get hadLosses => droppedItems > 0 || droppedFolders > 0;
+}
+
+/// A record that something was deleted for good.
+///
+/// Only an identifier and a time. A tombstone says nothing about what the
+/// entry was — not its title, not its kind — so the record of a deletion
+/// reveals nothing even to someone who could read the payload.
+@immutable
+final class Tombstone {
+  const Tombstone({required this.id, required this.purgedAt});
+
+  /// How long a tombstone is kept.
+  ///
+  /// Six months. They cannot be kept forever or the vault grows without
+  /// limit, and they cannot be dropped quickly either: a device offline for
+  /// longer than this will bring back entries deleted while it was away. Six
+  /// months is long enough that a phone left in a drawer over a holiday is
+  /// still safe, and short enough that the list stays small.
+  static const Duration keepFor = Duration(days: 182);
+
+  /// Identifier of the deleted item or folder.
+  ///
+  /// Item and folder identifiers are both 128-bit random values, so one list
+  /// can hold either without ambiguity.
+  final String id;
+
+  /// When it was deleted.
+  final DateTime purgedAt;
+
+  /// Stored form.
+  Map<String, Object?> toJson() => <String, Object?>{
+    'id': id,
+    'purgedAt': purgedAt.toUtc().toIso8601String(),
+  };
+
+  /// Reads a tombstone, or null when it cannot be understood.
+  static Tombstone? fromJson(Map<String, Object?> json) {
+    final Object? id = json['id'];
+    final Object? purgedAt = json['purgedAt'];
+    if (id is! String || !Ids.isValid(id) || purgedAt is! String) {
+      return null;
+    }
+    final DateTime? at = DateTime.tryParse(purgedAt);
+    return at == null ? null : Tombstone(id: id, purgedAt: at);
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is Tombstone && other.id == id && other.purgedAt == purgedAt;
+
+  @override
+  int get hashCode => Object.hash(id, purgedAt);
 }
