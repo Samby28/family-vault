@@ -30,11 +30,26 @@ final class FakeFileTransfer implements FileTransfer {
   /// How many times [pick] was called.
   int pickCount = 0;
 
+  /// Run while a pick, save or folder choice is "on screen".
+  ///
+  /// Stands in for what Android does: the picker is a separate screen, so the
+  /// app is sent to the background in the middle of the call. A test sets
+  /// this to fire the lifecycle change at exactly that moment.
+  Future<void> Function()? whileDialogOpen;
+
+  Future<void> _dialog() async {
+    final Future<void> Function()? during = whileDialogOpen;
+    if (during != null) {
+      await during();
+    }
+  }
+
   @override
   Future<SaveResult> save({
     required String suggestedName,
     required Uint8List bytes,
   }) async {
+    await _dialog();
     if (cancelSave) {
       return const SaveResult.cancelled();
     }
@@ -47,11 +62,15 @@ final class FakeFileTransfer implements FileTransfer {
   @override
   Future<PickedFile?> pick() async {
     pickCount += 1;
+    await _dialog();
     return nextPick;
   }
 
   @override
-  Future<String?> pickFolder() async => nextFolder;
+  Future<String?> pickFolder() async {
+    await _dialog();
+    return nextFolder;
+  }
 
   /// Feeds the most recently saved file back in, as if the user had carried it
   /// to another device and picked it there.

@@ -644,8 +644,64 @@ class VaultSession extends ChangeNotifier with WidgetsBindingObserver {
         state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden ||
         state == AppLifecycleState.detached;
-    if (offScreen && isUnlocked && settings.lockWhenHidden) {
+    if (offScreen && isUnlocked && settings.lockWhenHidden && !inSystemDialog) {
       lock();
+    }
+  }
+
+  // ------------------------------------------------- system dialogs
+
+  /// How long the vault may stay unlocked behind a system dialog.
+  ///
+  /// Long enough to find a file on a slow phone, short enough that a handset
+  /// left lying on the file picker does not stay open all afternoon.
+  ///
+  /// A field rather than a constant so a test can shorten it: the behaviour
+  /// at the end of the grace period is the part worth proving, and proving it
+  /// against a real three minutes is not a test anyone would keep running.
+  Duration systemDialogGrace = const Duration(minutes: 3);
+
+  int _systemDialogDepth = 0;
+  DateTime? _systemDialogSince;
+
+  /// True while this app is waiting on a system dialog it opened itself.
+  bool get inSystemDialog => _systemDialogDepth > 0;
+
+  /// Runs [action] without letting the background lock fire.
+  ///
+  /// On Android the file picker and the share sheet are separate screens, so
+  /// opening one sends this app to the background and
+  /// [didChangeAppLifecycleState] locks the vault - wiping the key while the
+  /// user is still choosing the file they wanted to import into it. Every
+  /// file operation on Android was impossible because of it.
+  ///
+  /// The suppression is deliberately narrow: it covers only a dialog this app
+  /// opened and is awaiting, and it is bounded in time. If the detour takes
+  /// longer than [systemDialogGrace] - the phone was put down, or the user
+  /// wandered off to another app from the picker - the vault locks as soon as
+  /// the dialog returns, and the operation fails safely rather than silently
+  /// proceeding on a vault that should have closed.
+  ///
+  /// The inactivity timer is untouched throughout and can still fire.
+  Future<T> duringSystemDialog<T>(Future<T> Function() action) async {
+    _systemDialogDepth++;
+    _systemDialogSince ??= DateTime.now();
+    try {
+      return await action();
+    } finally {
+      _systemDialogDepth--;
+      if (_systemDialogDepth == 0) {
+        final DateTime? since = _systemDialogSince;
+        _systemDialogSince = null;
+        final bool overstayed =
+            since != null &&
+            DateTime.now().difference(since) > systemDialogGrace;
+        if (overstayed && isUnlocked && settings.lockWhenHidden) {
+          lock();
+        } else {
+          touch();
+        }
+      }
     }
   }
 

@@ -7,6 +7,7 @@ import '../features/onboarding/create_vault_screen.dart';
 import '../features/onboarding/unlock_screen.dart';
 import '../platform/device_settings.dart';
 import '../platform/file_transfer.dart';
+import '../platform/guarded_file_transfer.dart';
 import '../vault/vault_repository.dart';
 import 'build_info.dart';
 import 'file_transfer_scope.dart';
@@ -41,6 +42,22 @@ class FamilyVaultApp extends StatefulWidget {
 class _FamilyVaultAppState extends State<FamilyVaultApp> {
   VaultSession? _session;
   String? _startupError;
+
+  /// Built once per session rather than per build, so the scope above
+  /// MaterialApp does not hand down a new object every frame and rebuild
+  /// every screen that depends on it.
+  GuardedFileTransfer? _transfer;
+
+  GuardedFileTransfer _transferFor(VaultSession session) {
+    final GuardedFileTransfer? existing = _transfer;
+    if (existing != null && identical(existing.session, session)) {
+      return existing;
+    }
+    return _transfer = GuardedFileTransfer(
+      inner: widget.fileTransferOverride ?? const PlatformFileTransfer(),
+      session: session,
+    );
+  }
 
   @override
   void initState() {
@@ -113,7 +130,7 @@ class _FamilyVaultAppState extends State<FamilyVaultApp> {
       return app;
     }
     return FileTransferScope(
-      transfer: widget.fileTransferOverride ?? const PlatformFileTransfer(),
+      transfer: _transferFor(session),
       child: SessionScope(session: session, child: app),
     );
   }
