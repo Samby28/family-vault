@@ -182,6 +182,62 @@ instruction that vault 2FA be optional. The built-in TOTP authenticator for the 
 
 ---
 
+### D-011 · Import merges per entry; it never replaces a vault wholesale
+
+**Decision.** Importing a backup compares the two vaults entry by entry and keeps
+whichever side changed each entry more recently. There is no "replace my vault with
+this file" option in the interface. Rebuilding from a file is offered only on the setup
+screen, where there is no vault to replace.
+
+**Why.** A wholesale replace silently discards every entry the other side never had —
+the password added on the phone this morning, if the laptop's backup is the one
+imported. The user cannot see what they lost, because the thing that would have told
+them is the thing that was overwritten. A per-entry merge cannot lose an entry that
+either side still holds.
+
+**The cost.** The merge needs a clock per entry and a record of deliberate deletions,
+which is what schema 2 adds (`Tombstone`, `Folder.updatedAt`,
+`VaultData.settingsUpdatedAt`). Without tombstones, "delete for good" would be
+temporary: any device still holding the entry would re-add it at the next merge.
+
+**Ties are broken symmetrically, not sensibly.** When two devices changed the same
+entry at the same recorded time, the winner is chosen by comparing the encoded JSON
+lexicographically. That is arbitrary, and arbitrariness is the point: both devices
+compute the same answer. A rule that sounds better — "keep what is on this device" —
+leaves the two devices disagreeing for ever. The convergence property test caught
+exactly this fault in the settings path.
+
+---
+
+### D-012 · Saving on Android goes through the share sheet, not a save dialog
+
+**Decision.** Export uses a native save dialog on Windows, macOS and Linux, and the
+system share sheet on Android. Opening a file uses the same call everywhere.
+
+**Why.** `file_selector_android` does not implement `getSaveLocation`. Established by
+resolving the package in CI run `42790776305` and reading it, rather than from memory:
+
+| Platform package | `openFile` | `getDirectoryPath` | `getSaveLocation` |
+|---|---|---|---|
+| `file_selector_windows-0.9.3+6` | yes | yes | yes |
+| `file_selector_android-0.5.2+11` | yes | yes | **no** |
+
+Android's system chooser hands back a `content://` URI rather than a filesystem path,
+so there is nothing for the application to write to. The share sheet is the platform's
+own answer to "give this file to something else", and it reaches Drive, Files, email
+and messaging apps without this project needing a credential for any of them.
+
+**Consequence the user sees.** The button reads "Share a copy" on Android and "Save a
+copy" on Windows, and after a share the application cannot report where the file went,
+so it does not pretend to.
+
+**Why handing an encrypted vault to an arbitrary app is acceptable.** The file is
+sealed before it reaches the transfer layer. The share target receives ciphertext and a
+header; without the password it is useless, which is the same reason it is safe on a
+cloud drive.
+
+---
+
 ## Part 2 — Risk register
 
 Likelihood and impact are rated Low, Medium or High. Risks are ordered by current
@@ -196,7 +252,7 @@ priority.
 | R-005 | Android autofill proves unreliable across OEM skins | Medium | Medium | Built last in Phase 1, after the vault is stable; documented honestly if partial | Agent |
 | R-006 | A real credential is committed to the public repository | Low | **High** — irreversible exposure | `.gitignore` blocks vault and key extensions; synthetic data only; no secret ever requested in chat | Agent |
 | R-007 | Flutter Windows desktop limitations block a required control | Low | Medium | Windows targeted first so problems surface early; limitations documented rather than worked around insecurely | Agent |
-| R-008 | Cloud-drive sync corrupts a vault through a race between two devices | Medium | High | Phase 2 conflict detection; never overwrite a newer file; integrity check before replacing a local vault | Agent |
+| R-008 | Cloud-drive sync corrupts a vault through a race between two devices | Medium | High | **Reduced 10 Nov 2026**: import merges per entry and never replaces wholesale (D-011); convergence and idempotence asserted on 100 random vault pairs each; a file that will not decrypt is rejected before anything local is touched. Remaining exposure is the automatic shared-folder watch, which is not built | Agent |
 | R-009 | Scope grows beyond what one project can deliver | Medium | Medium | Three-phase roadmap treated as authoritative; Phase 1 acceptance criteria fixed in the checklist | Shared |
 | R-010 | Debug-signed APK is mistaken for production-ready | Low | Low | Stated in the known-limitations document and in the release notes | Agent |
 

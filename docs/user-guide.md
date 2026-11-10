@@ -184,11 +184,78 @@ without a folder.
 
 ---
 
+## Backing up, and using two devices
+
+Open **Backup & Transfer** in the list on the left.
+
+### Making a backup
+
+Press **Save a copy** (on Windows) or **Share a copy** (on Android), and choose
+where it goes. What gets written is encrypted — the same as your vault file — so
+it is safe on a cloud drive, in email to yourself, or on a USB stick. Anyone who
+finds it sees nothing without the password.
+
+By default the backup uses your master password. If you would rather it had its
+own, turn on **Protect the backup with a separate password** and type that one
+twice. A backup password cannot be recovered any more than a master password
+can, so write it somewhere that is not inside the vault.
+
+**Do this.** The app cannot get your vault back from a broken phone by itself. A
+backup file is the only thing that can.
+
+### Moving entries between your phone and your laptop
+
+There is no automatic syncing in this version. You move entries yourself:
+
+1. On the **phone**, make a backup and send it somewhere the laptop can reach —
+   a cloud drive folder works well.
+2. On the **laptop**, open Backup & Transfer, press **Choose a backup file**,
+   pick that file and type its password.
+3. You will see how many entries the file holds **before anything changes**.
+   Press **Merge**.
+4. Then do the same in the other direction: back up on the laptop, import on the
+   phone.
+
+After both directions, the two devices hold the same thing.
+
+### What "merge" actually does
+
+It does **not** replace your vault with the file. It goes through entry by entry:
+
+| Situation | What happens |
+|---|---|
+| The entry is only in the file | It is added here |
+| The entry is only here | It stays, untouched |
+| The same entry is in both, unchanged | Nothing happens |
+| The same entry was edited on both devices | The **more recent** edit is kept, and the screen tells you how many entries that applied to |
+| You deleted the entry for good on the other device | It is deleted here too |
+
+So importing the same file twice is harmless — the second time it will simply
+say **Already up to date**. And nothing you still have on this device can be
+lost by importing.
+
+The one thing to be careful of: there is no "undo last import". Read the box
+that appears before you press Merge.
+
+### Setting up a new or replaced phone
+
+On a fresh device, the first screen offers **Restore from a backup file
+instead**, underneath the setup form. Choose it, pick your backup, and type the
+password that protects it. The restored vault keeps that password; you can
+change it afterwards in Settings.
+
+That option disappears once a vault exists on the device, so a restore can never
+wipe a vault you are already using. If you want to bring a backup into a vault
+you already have, use **Import** on the Backup & Transfer screen instead.
+
+---
+
 ## Honest limits
 
 Things this version does **not** do, so nobody is caught out:
 
-- **No syncing.** Each device has its own vault. Entries do not travel.
+- **No automatic syncing.** You export on one device and import on the other,
+  as above. Nothing moves on its own.
 - **No autofill on Android.** Copy and paste for now.
 - **No importing** from Chrome, Bitwarden or anywhere else. Entries are typed
   in by hand.

@@ -10,8 +10,8 @@ and tests that pass.
 
 ## 1. Not yet implemented
 
-As of v0.3.0 the encrypted vault works and can be used for real passwords. What
-is still missing:
+The encrypted vault works and can be used for real passwords, and as of 10 Nov
+2026 it can be backed up and moved between devices. What is still missing:
 
 | Area | State |
 |---|---|
@@ -23,13 +23,14 @@ is still missing:
 | Password-health report | **Working** |
 | Auto-lock, clipboard clearing, lock when hidden | **Working** |
 | Change master password | **Working** |
-| Encrypted export | Implemented in the session, no screen for it yet |
+| Encrypted backup and restore | **Working** — Backup & Transfer screen |
+| Importing another device's vault | **Working** — merges per entry, never overwrites |
 | Biometric unlock | Not implemented |
 | Screenshot blocking on Android | Not implemented |
 | Android Keystore / Windows Hello device key | Not implemented |
 | Android autofill | Not implemented |
 | CSV import from Chrome, Bitwarden, KeePass | Not implemented |
-| Cloud-drive synchronisation | Not implemented — Phase 2 |
+| Automatic cloud-drive synchronisation | Partly: manual export/import works and merges safely both ways; nothing watches a shared folder yet |
 | Optional key file or hardware key | Not implemented — Phase 2 |
 | Printable recovery sheet | Not implemented — Phase 2 |
 | Item history, custom fields, attachments | Not implemented — Phase 2 |
@@ -39,9 +40,23 @@ is still missing:
 Two consequences the user needs to know, both stated in the app and in the
 release notes:
 
-**There is no syncing, so each device holds a separate vault.** Entries added on
-the phone do not appear on the laptop. There is also no backup, so **losing the
-device loses the vault**.
+**Syncing is manual.** Each device holds its own vault file. To bring two devices
+into step, export a backup on one and import it on the other, then do the same in
+the other direction. The import merges entry by entry and keeps whichever side
+changed each entry more recently, so doing it both ways leaves both devices
+holding the same thing, and doing it twice changes nothing the second time.
+Nothing happens on its own: if nobody exports, nothing moves.
+
+**Take a backup.** The app cannot recover a vault from a lost device on its own.
+A backup file on a cloud drive or a USB stick is the only thing standing between
+a broken phone and a lost vault. The backup is encrypted, so where it is kept
+matters much less than whether it exists — but its password cannot be recovered
+either.
+
+**An import cannot be undone.** The merge is designed so it cannot lose an entry
+either side still holds, and it is tested for that on 100 random vault pairs. But
+once a backup from another device is merged in, there is no "undo last import".
+The dialog shows what the file contains before anything is applied; read it.
 
 **There is no fingerprint unlock**, so the master password is typed every time.
 

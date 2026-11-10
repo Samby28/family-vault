@@ -67,8 +67,8 @@ These override convenience at every decision point.
 | B2.2 | Open an existing vault | MP 7.1 | COMPLETED |
 | B2.3 | Lock and unlock | MP 7.1 | COMPLETED |
 | B2.4 | Change vault settings | MP 7.1 | COMPLETED |
-| B2.5 | Encrypted vault export | MP 7.1, MP 7.9 | IN PROGRESS (implemented in the session; no screen for it yet) |
-| B2.6 | Vault import | MP 7.1 | NOT STARTED (import screen is Phase 2) |
+| B2.5 | Encrypted vault export | MP 7.1, MP 7.9 | COMPLETED (Backup & Transfer screen; own password optional) |
+| B2.6 | Vault import | MP 7.1 | COMPLETED (reads, describes, then merges per entry; restore on the setup screen for a device with no vault) |
 | B2.7 | Delete a vault behind an explicit confirmation | MP 7.1 | COMPLETED (two confirmations and the word DELETE typed out) |
 | B2.8 | Full offline operation on the local encrypted file | MP 3, MP 7.1 | COMPLETED |
 | B2.9 | Clear warnings that a lost master password means a lost vault | MP 5.2 | COMPLETED |
@@ -128,7 +128,7 @@ These override convenience at every decision point.
 | B7.2 | CSV import from Google Chrome | MP 7.9, FI 2 | NOT STARTED |
 | B7.3 | CSV import from KeePass | MP 7.9, FI 2 | NOT STARTED |
 | B7.4 | Column mapping and validation to reduce import errors | MP 7.9 | NOT STARTED |
-| B7.5 | Encrypted export | MP 7.9, FI 2 | IN PROGRESS (implemented in the session; no screen yet) |
+| B7.5 | Encrypted export | MP 7.9, FI 2 | COMPLETED |
 | B7.6 | Explicit confirmation and warning that CSV export is unencrypted; temporary files handled securely | MP 7.9 | NOT STARTED |
 
 ### B8. Security controls
@@ -201,9 +201,9 @@ These override convenience at every decision point.
 
 | ID | Requirement | Source | Status |
 |---|---|---|---|
-| C1 | Encrypted vault file synchronised through a cloud drive | MP 9.1, FI 1 | NOT STARTED |
-| C2 | Provider-independent sync architecture isolated from the crypto core | MP 9.1 | NOT STARTED |
-| C3 | Upload, download, manual and automatic sync | MP 9.1 | NOT STARTED |
+| C1 | Encrypted vault file synchronised through a cloud drive | MP 9.1, FI 1 | IN PROGRESS (manual export/import works and merges correctly; the automatic shared-folder watch is not built) |
+| C2 | Provider-independent sync architecture isolated from the crypto core | MP 9.1 | COMPLETED (VaultMerge is pure Dart with no file, network or platform dependency; transfer is a FileTransfer interface) |
+| C3 | Upload, download, manual and automatic sync | MP 9.1 | IN PROGRESS (manual both ways; automatic not built) |
 | C4 | Version tracking, conflict detection and resolution | MP 9.1 | NOT STARTED |
 | C5 | Never overwrite a newer vault with an older one | MP 9.1 | NOT STARTED |
 | C6 | Recovery from interrupted transfers; integrity verification | MP 9.1 | NOT STARTED |

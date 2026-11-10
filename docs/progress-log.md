@@ -18,7 +18,135 @@ tests covering it pass in CI. A screen that renders is not a completed feature.
 | 3 | Vault interface: folders, logins, notes, cards, identities, generator, search, lock screen, trash | **COMPLETED** — v0.3.0, run 42652258834 |
 | 4 | TOTP authenticator and password-health reporting | **COMPLETED** — RFC vectors asserted |
 | 5 | Android autofill integration | NOT STARTED |
-| 6 | Encrypted cloud-drive synchronisation and Phase 2 integrations | NOT STARTED |
+| 6 | Encrypted cloud-drive synchronisation and Phase 2 integrations | **IN PROGRESS** — backup, restore and a tested per-item merge are done; the automatic shared-folder watch is not |
+
+---
+
+## 2026-11-10 — Backup, restore, and a merge that converges
+
+**Status: the vault can leave the device it was made on, and come back.**
+CI run `42797277075`: analyser clean, **319 tests pass**, up from 264.
+
+Until this point a lost phone was a lost vault. Three things were built, in
+this order and deliberately not the other one.
+
+### 1. Schema 2: tombstones and change stamps
+
+Sync needs two things the old schema could not carry.
+
+| Added | Why the merge cannot work without it |
+|---|---|
+| `Tombstone` (id + `purgedAt`), kept 182 days | A device that still holds a purged entry re-adds it at the next merge. Without tombstones, "delete for good" would be temporary. |
+| `Folder.updatedAt` | Two renames of the same folder are otherwise indistinguishable, so a merge would have to guess which came later. |
+| `VaultData.settingsUpdatedAt` | Settings otherwise follow whichever file happened to be read second. |
+
+Schema 1 files still open: both new fields read as absent, and a folder with
+no stamp gets its creation time, which correctly loses to any later rename.
+
+### 2. `VaultMerge`: last-write-wins per entry
+
+Pure Dart, no file, network or platform dependency — which is why it could be
+written and tested before any of the plumbing existed.
+
+| Rule | Reasoning |
+|---|---|
+| Newer `updatedAt` wins | The only clock available without a server. |
+| A tie breaks on the encoded JSON, compared lexicographically | Arbitrary, but **symmetric**: both devices pick the same side. A "sensible" rule each device applies to its own side leaves them disagreeing for ever. |
+| A tombstone wins unless the entry was edited after the purge | Editing a password on one device while the other purges it keeps the edit. The safer direction to fail. |
+| An item whose folder did not survive is unfiled, not dropped | Losing the folder must not lose the password inside it. |
+| Output sorted by id | The encoded payload is then byte-identical on both devices. |
+
+Two properties are asserted, on hand-built cases and on 100 seeded random
+vault pairs each:
+
+- **convergence** — `merge(a, b)` encodes identically to `merge(b, a)`
+- **idempotence** — merging the result with either input changes nothing
+
+### 3. Backup, restore and import screens
+
+Export writes the same encrypted format as the live vault, so an unencrypted
+copy never exists, not even briefly in a temporary file. It takes either the
+vault's master password or one of its own; when it takes the master password,
+the password is **checked against the file on disk first**, because a key
+derived from a typo produces a backup nobody can open and the user would not
+find out until the day they needed it.
+
+Import is read → describe → apply. The file is decrypted and decoded, the user
+is shown what is in it and what applying it would do, and only then is
+anything written. It merges; it does not overwrite.
+
+Restore sits on the **setup screen**, not in Settings: a replaced or wiped
+device reaches that screen and nowhere else, and it is the one moment when a
+vault can be rebuilt from a file with no risk of overwriting a live one —
+`createFromBackup` refuses outright if a vault already exists.
+
+### The platform difference is handled, not papered over
+
+`file_selector_android` implements `openFile` and `getDirectoryPath` but
+**not** `getSaveLocation`. This was established by resolving the package in CI
+(run `42790776305`) and reading it, not from memory:
+
+```
+file_selector_android-0.5.2+11/lib/src/file_selector_android.dart:51:
+  Future<String?> getDirectoryPath({...})
+```
+
+Android's system chooser returns a `content://` URI rather than a path, so
+there is no save dialog to offer. Saving on Android therefore goes through the
+share sheet and the button reads "Share a copy" instead of "Save a copy".
+Opening a file is the same call on both platforms. The same run confirmed both
+packages build on Android and Windows before a line of code depended on them.
+
+### Two real faults the tests caught
+
+**The merge did not converge.** When neither side had ever stamped its
+settings — two pre-schema-2 files, or two users who never changed a setting —
+the rule was "keep mine", which reads as harmless and is not: each device
+keeps its own settings, every merge reports a change, and the two never agree.
+Caught on **round 1 of 100** random pairs. It now falls through to the same
+symmetric tiebreak used for an exact timestamp tie. This is the entire reason
+the convergence property was written before the sync plumbing.
+
+**The password dialog used a disposed controller.** Disposing the
+`TextEditingController` when the dialog's future completed disposed it while
+the dialog was still animating out, so the field rebuilt once more against a
+disposed controller and threw. Replaced with `PasswordPrompt`, a
+`StatefulWidget` that owns its controller, so its life is tied to the dialog's
+own, closing animation included.
+
+### A test that was wrong about its own subject
+
+One test demanded the unlock failure message **not** contain the word
+"password", reasoning that naming the password tells an attacker the file is
+intact. The real message — "The master password may be wrong, or the file may
+have been changed or damaged" — names both causes and commits to neither,
+which is the property actually wanted. The code was right and the test was
+wrong; the test was corrected to assert that both halves are present. Worth
+recording, because the tempting move in that moment is to "fix" working code
+to satisfy a confused assertion.
+
+### Build failures, and what each turned out to be
+
+| Run | Failure | Cause |
+|---|---|---|
+| 42792067695 | Formatter | Two files; diff applied from the `if: failure()` step |
+| 42793420378 | Formatter | Four files — and the step also produced the resolved `pubspec.lock` for 25 new transitive packages and the Windows plugin registration, neither of which this environment can generate |
+| 42793932243 | `Undefined class 'Uint8List'` | `package:flutter/material.dart` does not export it; only `services.dart` does, which is why `vault_session.dart` never needed the import |
+| 42793932243 | `prefer_initializing_formals` on `Folder._updatedAt` | Unsatisfiable as written: a named parameter may not begin with an underscore. Resolved by making `updatedAt` required and non-nullable and moving the fallback into `fromJson` |
+| 42794629158 | `Binding has not yet been initialized` | `VaultSession.dispose` unregisters a `WidgetsBindingObserver`; needs a binding even with no widgets |
+| 42794629158 | Section not found in the tree | The test created the vault by calling the session, then started the app — whose startup calls `initialise`, which sets the status from whether a file exists, so the vault came back **locked** and every test landed on the unlock screen |
+| 42795423782 | Merge divergence, disposed controller | The two real faults above |
+
+### Not yet built, and not claimed
+
+- No automatic sync. Keeping two devices in step means exporting on one and
+  importing on the other, both ways. The merge makes that safe and repeatable;
+  nothing watches a folder yet.
+- No replace-wholesale import. Merge only, on purpose: a wholesale replace can
+  silently drop an entry the other side never had.
+- Still outstanding from before: biometric unlock, Android screenshot
+  blocking, device-keystore key wrapping, Android autofill, CSV import,
+  Windows installer.
 
 ---
 
