@@ -12,8 +12,8 @@ final class Folder {
     required this.id,
     required this.name,
     required this.createdAt,
-    DateTime? updatedAt,
-  }) : _updatedAt = updatedAt;
+    required this.updatedAt,
+  });
 
   /// Creates a folder with a new identifier and the current time.
   factory Folder.create(String name, {DateTime? now}) {
@@ -41,13 +41,19 @@ final class Folder {
         ? DateTime.tryParse(createdAt)
         : null;
     final Object? updated = json['updatedAt'];
+    final DateTime createdOrEpoch =
+        created ?? DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
     return Folder(
       id: id,
       name: name,
-      createdAt: created ?? DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
-      // Absent in schema 1, where a folder had no change stamp. [updatedAt]
-      // then falls back to the creation time.
-      updatedAt: updated is String ? DateTime.tryParse(updated) : null,
+      createdAt: createdOrEpoch,
+      // Absent in schema 1, where a folder carried no change stamp. Falling
+      // back to the creation time makes such a folder lose a merge against
+      // any folder that has been renamed since, which is correct: a rename is
+      // newer than the creation it replaced.
+      updatedAt:
+          (updated is String ? DateTime.tryParse(updated) : null) ??
+          createdOrEpoch,
     );
   }
 
@@ -60,14 +66,14 @@ final class Folder {
   /// When the folder was created.
   final DateTime createdAt;
 
-  final DateTime? _updatedAt;
-
-  /// When the folder was last changed, falling back to [createdAt].
+  /// When the folder was last changed.
   ///
   /// This exists for merging two devices. If the same folder was renamed on
   /// both while they were apart, this is the only thing that says which rename
-  /// came later — without it, a merge would have to guess.
-  DateTime get updatedAt => _updatedAt ?? createdAt;
+  /// came later — without it, a merge would have to guess. Equal to
+  /// [createdAt] for a folder that has never been renamed, and for one read
+  /// from a schema 1 file, which stored no such stamp.
+  final DateTime updatedAt;
 
   /// A copy with a different name, stamped as changed.
   Folder renamed(String newName, {DateTime? now}) => Folder(

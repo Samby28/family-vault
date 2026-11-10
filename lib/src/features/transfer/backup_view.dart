@@ -12,6 +12,8 @@
 //      change wins, and an entry only disappears if the other device
 //      recorded that it was deleted for good. See VaultMerge.
 
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
 import '../../app/file_transfer_scope.dart';
