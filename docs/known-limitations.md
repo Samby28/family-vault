@@ -41,6 +41,13 @@ The encrypted vault works and can be used for real passwords, and as of 10 Nov
 Two consequences the user needs to know, both stated in the app and in the
 release notes:
 
+**On Android, keep "Lock when the app is hidden" on.** In v0.5.0 that setting
+made every file operation impossible: the Android file picker is a separate
+screen, so the app went to the background and the vault locked mid-operation.
+Fixed in v0.5.1 — the vault now stays open while it waits on a dialog it opened
+itself, for at most three minutes. If you are on v0.5.0, turn the setting off
+before importing and on again afterwards.
+
 **Syncing happens when you press the button.** Point both devices at one shared
 folder and press Sync now on each. The merge keeps whichever side changed an
 entry more recently, so pressing it on both leaves both devices holding the same

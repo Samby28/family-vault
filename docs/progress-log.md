@@ -22,6 +22,66 @@ tests covering it pass in CI. A screen that renders is not a completed feature.
 
 ---
 
+## 2026-11-10 — The background lock wiped the key mid-pick (v0.5.1)
+
+**Status: fixed.** CI run `42816168137`: analyser clean, **386 tests pass**,
+up from 374. Reported by the owner from his phone, at step 9 of pairing:
+choose a backup file, type its password, and the app locks itself.
+
+### What it was
+
+On Android the file picker and the share sheet are separate screens. Opening
+one sends this app to the background; `didChangeAppLifecycleState` sees
+`paused`; "lock when the app is hidden" does exactly what it says and wipes
+the key — while the user is still choosing the file they meant to import into
+it. They come back holding the file with nothing open to put it in.
+
+It broke **every** file operation on Android: import, share a copy, and choose
+a shared folder. Windows was never affected: the dialog there is in-process and
+the app never backgrounds. So the feature shipped, passed on both platforms, and
+was unusable on one of them.
+
+### Why no test caught it
+
+The fake picker returned in-process. The app never went to the background the
+way a real one sends it there, so no test ever exercised the one interaction
+that mattered. A widget test that drives a picker is not testing a picker; it
+is testing a function call that happens to be named `pick`.
+
+The fake now takes a `whileDialogOpen` callback, and
+`system_dialog_lock_test.dart` fires the lifecycle change at exactly that
+moment. Those tests fail against the old code, which is the only thing that
+makes them a regression suite rather than decoration.
+
+### The fix, and why it is narrow
+
+`VaultSession.duringSystemDialog` holds off the background lock while the app
+is awaiting a dialog it opened itself. `GuardedFileTransfer` wraps the real
+transfer once, where the scope is built, so a screen added later that picks a
+file cannot forget to guard itself.
+
+This setting is what stands between a vault and a borrowed phone, so the
+suppression is bounded on every side:
+
+| Bound | Why |
+|---|---|
+| Only a dialog this app opened and is awaiting | A background caused by anything else still locks |
+| Three minutes, then lock on return | A handset left lying on the picker does not stay open; the operation then fails safely rather than proceeding on a vault that should have closed |
+| Inactivity timer untouched | The other lock keeps running throughout |
+| The setting being off is still obeyed | The fix narrows the rule; it does not overrule the user |
+| Nested dialogs counted, `finally` releases on a throw | No path leaves the guard stuck on |
+
+### What this says about the testing so far
+
+Both of the last two real faults — the merge divergence and this — were in the
+gap between what the fakes do and what the platform does. The merge was caught
+because a property test generated inputs I would not have thought to write. This
+one was not caught at all, and reached the owner. The lesson recorded here: a
+fake that cannot reproduce the platform's behaviour at the one moment that
+matters is a fake that will let that behaviour through.
+
+---
+
 ## 2026-11-10 — Shared-folder sync, with no provider in sight
 
 **Status: two devices keep each other in step.** CI run `42800987845`: analyser

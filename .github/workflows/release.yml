@@ -164,6 +164,18 @@ jobs:
           only way to get it to the second device is to get your vault there.
           `docs/user-guide.md` walks through it.
 
+          ### Fixed in 0.5.1
+
+          **Every file operation on Android was impossible in 0.5.0.** The
+          file picker and the share sheet are separate screens on Android, so
+          opening one sent the app to the background and the "lock when the
+          app is hidden" setting wiped the key mid-operation - you came back
+          holding the file you had chosen with nothing open to put it in.
+          Importing a backup, sharing a copy and choosing a shared folder are
+          all fixed. The vault now stays open while it is waiting on a dialog
+          it opened itself, for at most three minutes, and the inactivity
+          timer keeps running throughout. Windows was never affected.
+
           ### Not in this version
 
           Sync runs when you press the button. Nothing watches the folder and

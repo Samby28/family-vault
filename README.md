@@ -7,8 +7,8 @@ Your passwords are encrypted on your own device with a key derived from your
 master password. There is no server, no account to create, and nothing that any
 third party — including the people who built this — can decrypt.
 
-> **Project status: Phase 1 working — v0.5.0.** The encrypted vault is built and
-> usable on Android and Windows. **371 tests pass**, including security tests
+> **Project status: Phase 1 working — v0.5.1.** The encrypted vault is built and
+> usable on Android and Windows. **386 tests pass**, including security tests
 > against real libsodium. You can create a vault, save logins, notes, cards and
 > identities, organise them in folders, search, generate passwords, hold
 > two-factor codes, check password health, take an encrypted backup, and keep

@@ -8,7 +8,7 @@ library;
 const String appName = 'Family Vault';
 
 /// Human-readable version. Kept in step with `version:` in pubspec.yaml.
-const String appVersion = '0.5.0';
+const String appVersion = '0.5.1';
 
 /// Development stage currently delivered. Used by the shell so the interface
 /// never implies a feature exists before it does.
