@@ -197,7 +197,9 @@ class _BackupViewState extends State<BackupView> {
         return;
       }
       if (backup == null) {
-        setState(() => _notice = session.lastError ?? 'That file would not open.');
+        setState(
+          () => _notice = session.lastError ?? 'That file would not open.',
+        );
         return;
       }
 
@@ -230,34 +232,37 @@ class _BackupViewState extends State<BackupView> {
         title: const Text('Merge this backup in?'),
         content: SingleChildScrollView(
           child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(backup.fileName, style: const TextStyle(fontWeight: FontWeight.w600)),
-            const SizedBox(height: 12),
-            Text(_count(backup.liveItems, 'entry', 'entries')),
-            if (backup.trashedItems > 0)
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
               Text(
-                '${_count(backup.trashedItems, 'entry', 'entries')} '
-                'in its trash',
+                backup.fileName,
+                style: const TextStyle(fontWeight: FontWeight.w600),
               ),
-            if (backup.folders > 0)
-              Text(_count(backup.folders, 'folder', 'folders')),
-            if (backup.dropped > 0) ...<Widget>[
-              const SizedBox(height: 8),
-              Text(
-                '${backup.dropped} entries in the file could not be read and '
-                'will be left out.',
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              const SizedBox(height: 12),
+              Text(_count(backup.liveItems, 'entry', 'entries')),
+              if (backup.trashedItems > 0)
+                Text(
+                  '${_count(backup.trashedItems, 'entry', 'entries')} '
+                  'in its trash',
+                ),
+              if (backup.folders > 0)
+                Text(_count(backup.folders, 'folder', 'folders')),
+              if (backup.dropped > 0) ...<Widget>[
+                const SizedBox(height: 8),
+                Text(
+                  '${backup.dropped} entries in the file could not be read and '
+                  'will be left out.',
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ],
+              const SizedBox(height: 12),
+              const Text(
+                'Nothing in this vault is overwritten. Where the same entry '
+                'exists on both sides, the more recent change is kept. Entries '
+                'deleted for good on the other device are removed here too.',
               ),
             ],
-            const SizedBox(height: 12),
-            const Text(
-              'Nothing in this vault is overwritten. Where the same entry '
-              'exists on both sides, the more recent change is kept. Entries '
-              'deleted for good on the other device are removed here too.',
-            ),
-          ],
           ),
         ),
         actions: <Widget>[
@@ -282,10 +287,7 @@ class _BackupViewState extends State<BackupView> {
   static String _count(int n, String one, String many) =>
       '$n ${n == 1 ? one : many}';
 
-  Future<String?> _askPassword({
-    required String title,
-    required String hint,
-  }) {
+  Future<String?> _askPassword({required String title, required String hint}) {
     final TextEditingController field = TextEditingController();
     return showDialog<String>(
       context: context,
@@ -306,8 +308,7 @@ class _BackupViewState extends State<BackupView> {
                 labelText: 'Password',
                 border: OutlineInputBorder(),
               ),
-              onSubmitted: (String value) =>
-                  Navigator.of(context).pop(value),
+              onSubmitted: (String value) => Navigator.of(context).pop(value),
             ),
           ],
         ),
@@ -417,9 +418,7 @@ class _ExportCard extends StatelessWidget {
               child: FilledButton.icon(
                 key: const Key('backup-export'),
                 onPressed: onExport,
-                icon: Icon(
-                  hasSaveDialog ? Icons.save_alt : Icons.ios_share,
-                ),
+                icon: Icon(hasSaveDialog ? Icons.save_alt : Icons.ios_share),
                 label: Text(hasSaveDialog ? 'Save a copy' : 'Share a copy'),
               ),
             ),
@@ -491,7 +490,10 @@ class _TransferAdvice extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text('Keeping two devices in step', style: theme.textTheme.titleSmall),
+            Text(
+              'Keeping two devices in step',
+              style: theme.textTheme.titleSmall,
+            ),
             const SizedBox(height: 8),
             Text(
               'Export on one device, import on the other, and repeat in the '

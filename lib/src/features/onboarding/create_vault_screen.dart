@@ -76,9 +76,8 @@ class _CreateVaultScreenState extends State<CreateVaultScreen> {
     }
     final String? password = await showDialog<String>(
       context: context,
-      builder: (BuildContext context) => _RestorePasswordDialog(
-        fileName: chosen.name,
-      ),
+      builder: (BuildContext context) =>
+          _RestorePasswordDialog(fileName: chosen.name),
     );
     if (password == null || password.isEmpty || !mounted) {
       return;
@@ -362,8 +361,7 @@ class _RestorePasswordDialog extends StatefulWidget {
   final String fileName;
 
   @override
-  State<_RestorePasswordDialog> createState() =>
-      _RestorePasswordDialogState();
+  State<_RestorePasswordDialog> createState() => _RestorePasswordDialogState();
 }
 
 class _RestorePasswordDialogState extends State<_RestorePasswordDialog> {

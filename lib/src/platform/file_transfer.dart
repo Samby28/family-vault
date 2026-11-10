@@ -47,7 +47,9 @@ enum SaveMethod {
 final class SaveResult {
   const SaveResult.savedTo(this.path) : method = SaveMethod.savedToPath;
 
-  const SaveResult.shared() : method = SaveMethod.handedToShareSheet, path = null;
+  const SaveResult.shared()
+    : method = SaveMethod.handedToShareSheet,
+      path = null;
 
   const SaveResult.cancelled() : method = SaveMethod.cancelled, path = null;
 
@@ -182,9 +184,7 @@ final class PlatformFileTransfer implements FileTransfer {
   @override
   Future<PickedFile?> pick() async {
     final XFile? chosen = await openFile(
-      acceptedTypeGroups: hasSaveDialog
-          ? _vaultFiles
-          : const <XTypeGroup>[],
+      acceptedTypeGroups: hasSaveDialog ? _vaultFiles : const <XTypeGroup>[],
     );
     if (chosen == null) {
       return null;

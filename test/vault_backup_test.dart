@@ -44,7 +44,11 @@ void main() {
       await session.saveItem(login(title));
     }
     final Uint8List? bytes = session.exportEncrypted(password);
-    expect(bytes, isNotNull, reason: session.lastError ?? 'export returned null');
+    expect(
+      bytes,
+      isNotNull,
+      reason: session.lastError ?? 'export returned null',
+    );
     return bytes!;
   }
 
@@ -104,23 +108,27 @@ void main() {
   });
 
   group('reading a backup', () {
-    test('rejects the wrong password without saying which part was wrong',
-        () async {
-      final Uint8List file = await exportWith(password: 'right password here');
+    test(
+      'rejects the wrong password without saying which part was wrong',
+      () async {
+        final Uint8List file = await exportWith(
+          password: 'right password here',
+        );
 
-      expect(
-        await session.readBackup(file: file, password: 'wrong password here'),
-        isNull,
-      );
-      expect(session.lastError, isNotNull);
-      expect(
-        session.lastError,
-        isNot(contains('password')),
-        reason:
-            'a message naming the password as the problem tells an attacker '
-            'the file itself is intact',
-      );
-    });
+        expect(
+          await session.readBackup(file: file, password: 'wrong password here'),
+          isNull,
+        );
+        expect(session.lastError, isNotNull);
+        expect(
+          session.lastError,
+          isNot(contains('password')),
+          reason:
+              'a message naming the password as the problem tells an attacker '
+              'the file itself is intact',
+        );
+      },
+    );
 
     test('rejects a file that is not a vault at all', () async {
       await session.createVault('master password for the test');
@@ -175,8 +183,7 @@ void main() {
       );
     });
 
-    test('keeps the vault openable with its own password afterwards',
-        () async {
+    test('keeps the vault openable with its own password afterwards', () async {
       // The merged result must be sealed under the vault's key, not the
       // backup's. Getting this wrong locks the user out of their own vault
       // with a password they never chose.
@@ -239,48 +246,52 @@ void main() {
   });
 
   group('restoring onto a device with no vault', () {
-    test('rebuilds the vault from the file, keyed by the backup password',
-        () async {
-      final Uint8List file = await exportWith(
-        password: 'the backup password',
-        titles: <String>['Bank', 'Email'],
-      );
-      await session.deleteVault();
-      expect(session.status, VaultStatus.absent);
+    test(
+      'rebuilds the vault from the file, keyed by the backup password',
+      () async {
+        final Uint8List file = await exportWith(
+          password: 'the backup password',
+          titles: <String>['Bank', 'Email'],
+        );
+        await session.deleteVault();
+        expect(session.status, VaultStatus.absent);
 
-      final bool restored = await session.createFromBackup(
-        file: file,
-        password: 'the backup password',
-      );
+        final bool restored = await session.createFromBackup(
+          file: file,
+          password: 'the backup password',
+        );
 
-      expect(restored, isTrue, reason: session.lastError);
-      expect(session.status, VaultStatus.unlocked);
-      expect(session.data!.liveItems, hasLength(2));
+        expect(restored, isTrue, reason: session.lastError);
+        expect(session.status, VaultStatus.unlocked);
+        expect(session.data!.liveItems, hasLength(2));
 
-      session.lock();
-      expect(await session.unlock('the backup password'), isTrue);
-    });
+        session.lock();
+        expect(await session.unlock('the backup password'), isTrue);
+      },
+    );
 
-    test('refuses when a vault already exists, rather than overwriting it',
-        () async {
-      final Uint8List file = await exportWith(
-        password: 'the backup password',
-        titles: <String>['Bank'],
-      );
-      await session.saveItem(login('Must survive'));
+    test(
+      'refuses when a vault already exists, rather than overwriting it',
+      () async {
+        final Uint8List file = await exportWith(
+          password: 'the backup password',
+          titles: <String>['Bank'],
+        );
+        await session.saveItem(login('Must survive'));
 
-      final bool restored = await session.createFromBackup(
-        file: file,
-        password: 'the backup password',
-      );
+        final bool restored = await session.createFromBackup(
+          file: file,
+          password: 'the backup password',
+        );
 
-      expect(restored, isFalse);
-      expect(session.lastError, contains('already exists'));
-      expect(
-        session.data!.liveItems.map((VaultItem i) => i.title),
-        contains('Must survive'),
-      );
-    });
+        expect(restored, isFalse);
+        expect(session.lastError, contains('already exists'));
+        expect(
+          session.data!.liveItems.map((VaultItem i) => i.title),
+          contains('Must survive'),
+        );
+      },
+    );
 
     test('refuses a wrong password without creating a vault', () async {
       final Uint8List file = await exportWith(password: 'right password here');
