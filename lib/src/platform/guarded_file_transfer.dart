@@ -42,6 +42,5 @@ final class GuardedFileTransfer implements FileTransfer {
   Future<PickedFile?> pick() => session.duringSystemDialog(inner.pick);
 
   @override
-  Future<String?> pickFolder() =>
-      session.duringSystemDialog(inner.pickFolder);
+  Future<String?> pickFolder() => session.duringSystemDialog(inner.pickFolder);
 }

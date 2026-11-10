@@ -77,7 +77,8 @@ void main() {
       expect(
         session.isUnlocked,
         isTrue,
-        reason: 'this is the bug: the key was wiped mid-pick, leaving the '
+        reason:
+            'this is the bug: the key was wiped mid-pick, leaving the '
             'import with nothing to merge into',
       );
       expect(session.data!.liveItems, hasLength(1));
@@ -174,39 +175,47 @@ void main() {
       expect(session.isUnlocked, isFalse);
     });
 
-    test('so the operation fails safely instead of quietly proceeding',
-        () async {
-      await openVault();
-      final Uint8List backup = session.exportEncrypted('the backup password')!;
-      session.systemDialogGrace = Duration.zero;
-      files.nextPick = PickedFile(name: 'b.fvault', bytes: backup);
-      files.whileDialogOpen = () async {
-        goesToBackground();
-        await Future<void>.delayed(const Duration(milliseconds: 2));
-      };
+    test(
+      'so the operation fails safely instead of quietly proceeding',
+      () async {
+        await openVault();
+        final Uint8List backup = session.exportEncrypted(
+          'the backup password',
+        )!;
+        session.systemDialogGrace = Duration.zero;
+        files.nextPick = PickedFile(name: 'b.fvault', bytes: backup);
+        files.whileDialogOpen = () async {
+          goesToBackground();
+          await Future<void>.delayed(const Duration(milliseconds: 2));
+        };
 
-      final PickedFile? chosen = await guarded.pick();
-      final BackupContents? read = await session.readBackup(
-        file: chosen!.bytes,
-        password: 'the backup password',
-      );
+        final PickedFile? chosen = await guarded.pick();
+        final BackupContents? read = await session.readBackup(
+          file: chosen!.bytes,
+          password: 'the backup password',
+        );
 
-      expect(await session.mergeBackup(read!), isNull);
-      expect(session.lastError, contains('Unlock'));
-    });
+        expect(await session.mergeBackup(read!), isNull);
+        expect(session.lastError, contains('Unlock'));
+      },
+    );
 
-    test('respects the setting being off, the same as any other lock',
-        () async {
-      await openVault();
-      await session.updateSettings(const VaultSettings(lockWhenHidden: false));
-      session.systemDialogGrace = Duration.zero;
-      files.whileDialogOpen = () async =>
-          Future<void>.delayed(const Duration(milliseconds: 2));
+    test(
+      'respects the setting being off, the same as any other lock',
+      () async {
+        await openVault();
+        await session.updateSettings(
+          const VaultSettings(lockWhenHidden: false),
+        );
+        session.systemDialogGrace = Duration.zero;
+        files.whileDialogOpen = () async =>
+            Future<void>.delayed(const Duration(milliseconds: 2));
 
-      await guarded.pick();
+        await guarded.pick();
 
-      expect(session.isUnlocked, isTrue);
-    });
+        expect(session.isUnlocked, isTrue);
+      },
+    );
   });
 
   group('bookkeeping', () {
