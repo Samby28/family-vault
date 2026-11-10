@@ -23,7 +23,6 @@
 // whole by the next run.
 
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 
@@ -219,12 +218,14 @@ final class SyncReport {
 
 /// Merging through a shared folder.
 final class VaultSync {
-  const VaultSync({required VaultCodec codec, required SyncFolder folder})
-    : _codec = codec,
-      _folder = folder;
+  const VaultSync({required this.codec, required this.folder});
 
-  final VaultCodec _codec;
-  final SyncFolder _folder;
+  /// Seals and opens the exchange files. Public because a private field
+  /// cannot be a named initializing formal in Dart.
+  final VaultCodec codec;
+
+  /// The folder both devices can see.
+  final SyncFolder folder;
 
   /// The file name a device with this name writes.
   ///
@@ -261,7 +262,7 @@ final class VaultSync {
     DateTime? now,
   }) async {
     final String ownFile = fileNameFor(deviceName);
-    final List<String> names = await _folder.list();
+    final List<String> names = await folder.list();
 
     VaultData accumulated = local;
     MergeOutcome? combined;
@@ -296,9 +297,9 @@ final class VaultSync {
     // Written even when nothing changed, and written last. A device whose
     // file is missing from the folder is invisible to the others, so the one
     // thing this must not do is skip the write because the merge was a no-op.
-    await _folder.write(
+    await folder.write(
       ownFile,
-      _codec.seal(masterPassword: syncSecret, payload: accumulated.encode()),
+      codec.seal(masterPassword: syncSecret, payload: accumulated.encode()),
     );
 
     return SyncReport(
@@ -311,8 +312,8 @@ final class VaultSync {
 
   Future<PeerRead> _readPeer(String name, String syncSecret) async {
     try {
-      final Uint8List bytes = await _folder.read(name);
-      final Uint8List payload = _codec.open(
+      final Uint8List bytes = await folder.read(name);
+      final Uint8List payload = codec.open(
         file: bytes,
         masterPassword: syncSecret,
       );
