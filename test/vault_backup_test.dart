@@ -15,6 +15,11 @@ import 'support/in_memory_vault_repository.dart';
 /// that writes something the import cannot read. So every test here starts
 /// from bytes that a real export actually produced.
 void main() {
+  // VaultSession registers itself as a WidgetsBindingObserver so it can lock
+  // when the app goes to the background, and dispose() unregisters it. Both
+  // need a binding, even in a test with no widgets.
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   late FakeCryptoService crypto;
   late InMemoryVaultRepository repository;
   late VaultSession session;

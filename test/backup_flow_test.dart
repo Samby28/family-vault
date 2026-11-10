@@ -60,8 +60,27 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  /// Creates the vault through the interface, as a first-time user would.
+  ///
+  /// It has to be the interface rather than a direct session call: the app's
+  /// own startup calls VaultSession.initialise, which sets the status from
+  /// whether a vault file exists - so a vault created before the app starts
+  /// comes back as locked and the test lands on the unlock screen.
+  Future<void> createVaultThroughUi(
+    WidgetTester tester,
+    String password,
+  ) async {
+    await tester.enterText(find.byType(TextField).first, password);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).at(1), password);
+    await tester.pumpAndSettle();
+    await tapVisible(tester, find.text('I understand'));
+    await tapVisible(tester, find.text('Create my vault'));
+  }
+
   Future<void> openBackupScreen(WidgetTester tester) async {
-    await session.createVault('master password for the test');
+    await start(tester);
+    await createVaultThroughUi(tester, 'master password for the test');
     await session.saveItem(
       VaultItem.create(
         type: VaultItemType.login,
@@ -69,7 +88,7 @@ void main() {
         fields: const <String, String>{ItemField.password: 'a-password-99'},
       ),
     );
-    await start(tester);
+    await tester.pumpAndSettle();
     await tapVisible(tester, find.text('Backup & Transfer'));
   }
 
