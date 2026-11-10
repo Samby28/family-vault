@@ -132,10 +132,22 @@ jobs:
           your other accounts, see which of your passwords need attention, and
           lock the vault by hand, on a timer, or when the app leaves the screen.
 
+          **New: backup, restore, and moving entries between devices.** Open
+          **Backup & Transfer** to write an encrypted copy of your vault - safe
+          to keep on a cloud drive or a USB stick, because it is useless
+          without its password. Import a backup from your other device and the
+          two vaults are merged entry by entry: whichever side changed an entry
+          more recently wins, entries you deleted stay deleted, and nothing you
+          still have on this device can be lost. Importing the same file twice
+          is harmless. A replaced phone can be set up straight from a backup:
+          the first screen offers "Restore from a backup file instead".
+
           ### Not in this version
 
-          No syncing between devices yet, no autofill on Android, no importing
-          from another password manager, and no printable recovery sheet. See
+          Moving entries between devices is manual - you export on one and
+          import on the other, both ways. Nothing watches a shared folder yet.
+          Also missing: autofill on Android, importing from another password
+          manager, and a printable recovery sheet. See
           `docs/known-limitations.md`.
 
           ### Downloads
@@ -165,9 +177,11 @@ jobs:
           vault cannot be opened by anyone, including us. There is no reset.
           Write it down and keep it somewhere safe.
 
-          Until syncing arrives, each device has its own separate vault, and
-          your vault exists only on that device. If you lose the device, you
-          lose the vault.
+          **Take a backup.** Each device keeps its own vault file, and the app
+          cannot get it back from a device you no longer have. A backup file is
+          the only thing standing between a broken phone and a lost vault - and
+          its password cannot be recovered either, so keep that somewhere other
+          than inside the vault.
 
           This project has not had an independent security audit.
           NOTES

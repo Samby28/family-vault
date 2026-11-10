@@ -7,16 +7,19 @@ Your passwords are encrypted on your own device with a key derived from your
 master password. There is no server, no account to create, and nothing that any
 third party — including the people who built this — can decrypt.
 
-> **Project status: Phase 1 working — v0.3.0.** The encrypted vault is built and
-> usable on Android and Windows. **264 tests pass**, including security tests
+> **Project status: Phase 1 working — v0.4.0.** The encrypted vault is built and
+> usable on Android and Windows. **319 tests pass**, including security tests
 > against real libsodium. You can create a vault, save logins, notes, cards and
 > identities, organise them in folders, search, generate passwords, hold
-> two-factor codes, and check password health.
+> two-factor codes, check password health, take an encrypted backup, and move
+> entries between two devices through a per-entry merge that is tested for
+> convergence and idempotence.
 >
-> **Not yet built:** syncing between devices, Android autofill, importing from
-> another password manager, a recovery sheet, fingerprint unlock. Each device
-> has its own separate vault, so **if you lose the device you lose the vault**.
-> See [`docs/known-limitations.md`](docs/known-limitations.md).
+> **Not yet built:** automatic syncing — moving entries between devices is
+> manual, an export on one and an import on the other, with nothing watching a
+> shared folder yet. Also Android autofill, importing from another password
+> manager, a recovery sheet, and fingerprint unlock. See
+> [`docs/known-limitations.md`](docs/known-limitations.md).
 >
 > New here? [Installing](docs/installing.md) · [How to use it](docs/user-guide.md)
 
