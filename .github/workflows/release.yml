@@ -164,6 +164,17 @@ jobs:
           only way to get it to the second device is to get your vault there.
           `docs/user-guide.md` walks through it.
 
+          ### Changed in 0.5.2
+
+          **Shared-folder sync is no longer offered on Android**, because it
+          cannot work there. Since Android 11 an app may only read and write
+          its own private directory, so a folder picked anywhere else on the
+          phone cannot be opened at all - no permission changes that, and it
+          does not depend on which cloud app you use. Setting one up failed
+          with a system error on the first sync. The Backup & Transfer screen
+          now says so on Android and points at backup and import, which work
+          there and merge in exactly the same way. Windows is unaffected.
+
           ### Fixed in 0.5.1
 
           **Every file operation on Android was impossible in 0.5.0.** The

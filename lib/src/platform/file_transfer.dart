@@ -92,6 +92,12 @@ abstract interface class FileTransfer {
   /// interface can say "Save a copy" rather than "Share a copy".
   bool get hasSaveDialog;
 
+  /// True when this platform can read and write a folder the user picks.
+  ///
+  /// False on Android and on the web, where the shared-folder sync cannot
+  /// work at all. See [PlatformFileTransfer.canUseSharedFolder].
+  bool get canUseSharedFolder;
+
   /// Offers [bytes] to the user as a file named [suggestedName].
   Future<SaveResult> save({
     required String suggestedName,
@@ -118,6 +124,26 @@ final class PlatformFileTransfer implements FileTransfer {
   /// dart:io.
   @override
   bool get hasSaveDialog =>
+      !kIsWeb && defaultTargetPlatform != TargetPlatform.android;
+
+  /// Whether a folder the user picks can be read and written as a folder.
+  ///
+  /// False on Android, and not for want of a permission. Since Android 11,
+  /// scoped storage limits an app to its own directory: a path under
+  /// /storage/emulated/0 cannot be opened with ordinary file access however
+  /// the folder was chosen, and neither WRITE_EXTERNAL_STORAGE nor the
+  /// privileged WRITE_MEDIA_STORAGE grants an app targeting Android 11 or
+  /// later any more than that. The folder picker returns a path string that
+  /// the system will then refuse to open, which surfaced as a
+  /// PathAccessException on the first sync.
+  ///
+  /// The supported route is the Storage Access Framework, through Android's
+  /// document APIs rather than file paths. It is not built yet, so this
+  /// returns false and the interface offers backup and import instead of a
+  /// folder that cannot work. False on the web too: a browser gives a page
+  /// the files a user picks, never a directory it can list and write later.
+  @override
+  bool get canUseSharedFolder =>
       !kIsWeb && defaultTargetPlatform != TargetPlatform.android;
 
   /// A filter for the save and open dialogs.

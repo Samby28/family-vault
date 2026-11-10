@@ -31,6 +31,9 @@ final class GuardedFileTransfer implements FileTransfer {
   bool get hasSaveDialog => inner.hasSaveDialog;
 
   @override
+  bool get canUseSharedFolder => inner.canUseSharedFolder;
+
+  @override
   Future<SaveResult> save({
     required String suggestedName,
     required Uint8List bytes,

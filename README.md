@@ -7,7 +7,7 @@ Your passwords are encrypted on your own device with a key derived from your
 master password. There is no server, no account to create, and nothing that any
 third party — including the people who built this — can decrypt.
 
-> **Project status: Phase 1 working — v0.5.1.** The encrypted vault is built and
+> **Project status: Phase 1 working — v0.5.2.** The encrypted vault is built and
 > usable on Android and Windows. **386 tests pass**, including security tests
 > against real libsodium. You can create a vault, save logins, notes, cards and
 > identities, organise them in folders, search, generate passwords, hold
@@ -15,14 +15,21 @@ third party — including the people who built this — can decrypt.
 > two devices in step through any folder they both see — merged entry by entry,
 > with convergence and idempotence asserted on random vault pairs.
 >
-> **No cloud account of any kind.** Sync is a folder: point both devices at your
-> own Drive, OneDrive or Dropbox folder, a network share or a USB stick. This
+> **No cloud account of any kind.** Shared-folder sync is a folder: point both
+> devices at your own Drive, OneDrive or Dropbox folder, or a network share. This
 > code has no integration with any provider and cannot tell which one is in use.
 >
+> **Shared folders are desktop-only.** Since Android 11 an app may only read and
+> write its own private directory, so a folder picked elsewhere on a phone cannot
+> be opened at all — no permission changes that. On Android, use backup and
+> import: the same encrypted file and the same entry-by-entry merge, moved by
+> hand. See [`docs/decisions-and-risks.md`](docs/decisions-and-risks.md), D-015.
+>
 > **Not yet built:** sync runs when you press the button — nothing watches the
-> folder and nothing runs on a schedule. Also Android autofill, importing from
-> another password manager, a recovery sheet, and fingerprint unlock. See
-> [`docs/known-limitations.md`](docs/known-limitations.md).
+> folder and nothing runs on a schedule. Also the Storage Access Framework
+> implementation that would bring shared folders to Android, Android autofill,
+> importing from another password manager, a recovery sheet, and fingerprint
+> unlock. See [`docs/known-limitations.md`](docs/known-limitations.md).
 >
 > New here? [Installing](docs/installing.md) · [How to use it](docs/user-guide.md)
 

@@ -79,12 +79,17 @@ class _BackupViewState extends State<BackupView> {
           ),
         ],
         const SizedBox(height: 16),
-        // The public demonstration runs in a browser, which gives a page
-        // access to files the user picks but never to a folder it can list
-        // and write to later. Showing a sync card that cannot work would be
-        // worse than not showing one.
-        if (!isDemoBuild) ...<Widget>[
+        // Only where a picked folder can actually be read and written.
+        // On Android it cannot - scoped storage - and in the browser there
+        // is no folder to pick. Offering a card that cannot work is worse
+        // than offering none: the user sets it up, presses Sync now, and
+        // gets an error from the operating system.
+        if (!isDemoBuild && transfer.canUseSharedFolder) ...<Widget>[
           const SyncCard(),
+          const SizedBox(height: 16),
+        ],
+        if (!isDemoBuild && !transfer.canUseSharedFolder) ...<Widget>[
+          const _NoSharedFolderHere(),
           const SizedBox(height: 16),
         ],
         const _TransferAdvice(),
@@ -493,6 +498,50 @@ class _TransferAdvice extends StatelessWidget {
             Text(
               'Nothing is uploaded anywhere by this app. A backup file goes '
               'only where you send it.',
+              style: theme.textTheme.bodySmall,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Explains why this device has no shared-folder option.
+///
+/// Shown instead of the sync card where a picked folder cannot be read and
+/// written. Saying nothing would be worse: the feature is described in the
+/// guide and in the release notes, and a user who cannot find it will assume
+/// the app is broken rather than that the platform forbids it.
+class _NoSharedFolderHere extends StatelessWidget {
+  const _NoSharedFolderHere();
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    return Card(
+      color: theme.colorScheme.surfaceContainerHighest,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              'Shared folders are not available on this device',
+              style: theme.textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Since Android 11 an app may only read and write its own private '
+              'folder. A folder you pick elsewhere on the phone cannot be '
+              'opened by this app, and no permission changes that.',
+              style: theme.textTheme.bodySmall,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Use Make a backup and Import above instead. They work the same '
+              'way and merge entry by entry exactly as a sync does — the '
+              'only difference is that you move the file yourself.',
               style: theme.textTheme.bodySmall,
             ),
           ],

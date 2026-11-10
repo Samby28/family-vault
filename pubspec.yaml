@@ -3,7 +3,7 @@ description: "Family Vault - a secure, offline-first, zero-knowledge password ma
 publish_to: "none"
 
 # version+build. The build number is bumped by CI for release tags.
-version: 0.5.1+6
+version: 0.5.2+7
 
 environment:
   # Raised from >=3.4.0 when sodium was added: the resolved lockfile reports a

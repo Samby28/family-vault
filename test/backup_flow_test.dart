@@ -274,12 +274,50 @@ void main() {
   });
 
   group('the shared-folder card', () {
-    appTest('is shown on a normal build', (WidgetTester tester) async {
+    appTest('is shown where a picked folder can be read and written', (
+      WidgetTester tester,
+    ) async {
       await openBackupScreen(tester);
       expect(
         find.text('Keep two devices in step through a shared folder'),
         findsOneWidget,
       );
+    });
+
+    appTest('is replaced by an explanation where it cannot work', (
+      WidgetTester tester,
+    ) async {
+      // Android: scoped storage means a folder the user picks cannot be
+      // opened by this app at all. Offering the card anyway lets someone set
+      // up a sync that fails with an operating-system error the first time
+      // they press the button - which is exactly what happened.
+      files = FakeFileTransfer(canUseSharedFolder: false);
+      await openBackupScreen(tester);
+
+      expect(
+        find.text('Keep two devices in step through a shared folder'),
+        findsNothing,
+      );
+      expect(
+        find.text('Shared folders are not available on this device'),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('sync-choose-folder')),
+        findsNothing,
+        reason: 'there must be no way to start setting one up',
+      );
+    });
+
+    appTest('and the explanation points at what does work', (
+      WidgetTester tester,
+    ) async {
+      files = FakeFileTransfer(canUseSharedFolder: false);
+      await openBackupScreen(tester);
+
+      expect(find.textContaining('Import'), findsWidgets);
+      expect(find.byKey(const Key('backup-import')), findsOneWidget);
+      expect(find.byKey(const Key('backup-export')), findsOneWidget);
     });
 
     appTest('does nothing when no folder is chosen', (

@@ -279,10 +279,14 @@ a setup mistake that may not have happened.
 
 ### D-014 · The shared folder is a folder, and the app knows nothing about the provider
 
-**Decision.** Sync works through any directory both devices can reach. There is no
-provider integration, no OAuth, no API key, no SDK. The user picks a folder with the
-platform's own folder picker — `getDirectoryPath`, which `file_selector_android`
-**does** implement, unlike `getSaveLocation` (D-012).
+**Decision.** Sync works through any directory both devices can reach **and can
+open**. There is no provider integration, no OAuth, no API key, no SDK. The user
+picks a folder with the platform's own folder picker.
+
+> **Superseded in part, 10 Nov 2026.** "Any directory both devices can reach" held
+> on desktop and not on Android, where a picked folder cannot be opened at all. See
+> D-015. What follows is still the decision for the platforms where the feature is
+> offered.
 
 **Why.** It satisfies MP's ban on paid services and mandatory subscriptions by not
 having a service at all, and it works with Google Drive, OneDrive, Dropbox, Syncthing, a
@@ -299,6 +303,46 @@ other file, merges them all, then writes its own file carrying the result. So a 
 device picks up the first through the second without the two ever meeting — tested in
 `vault_sync_test.dart` — at the cost of each file growing to hold the whole vault, which
 it does anyway.
+
+---
+
+### D-015 · Shared-folder sync is a desktop feature; Android gets backup and import
+
+**Decision.** `DirectorySyncFolder` uses `dart:io` and is offered only where a
+user-picked folder can actually be opened that way. On Android the shared-folder
+section is not shown at all, and the screen says why and points at backup and
+import.
+
+**Why it had to change.** D-014 claimed the folder was "any directory both devices
+can reach". That is true on Windows and false on Android, and the error reached the
+owner before a test did: `PathAccessException` on the first `Sync now`, from
+`/storage/emulated/0/Family Vault`.
+
+| Android version | What an app may read and write outside its own directory |
+|---|---|
+| 10 and earlier | Shared storage, with `WRITE_EXTERNAL_STORAGE` |
+| 11 and later | Nothing. The permission, and the privileged `WRITE_MEDIA_STORAGE`, grant an app targeting Android 11 or later no additional access |
+
+So `getDirectoryPath` hands back a path string the system will then refuse to
+open. No permission, no cloud provider and no folder-sync app changes that — the
+limit is on the file API, not on the folder.
+
+**What was wrong in the design, stated plainly.** `SyncFolder` was correctly
+written as an interface so that a different implementation could exist, and then
+only a `dart:io` one was built and the feature was offered on both platforms. The
+abstraction was there; the second implementation was assumed rather than written.
+
+**What is not built.** A `SafSyncFolder` over Android's Storage Access Framework —
+`ACTION_OPEN_DOCUMENT_TREE`, a persisted tree URI, and `DocumentFile` reads and
+writes through a platform channel. That is the supported route and it would make
+the folder sync work on Android. Until it exists, the app does not offer the
+feature there rather than offering one that fails on first use.
+
+**Why not "All files access" instead.** `MANAGE_EXTERNAL_STORAGE` would make the
+existing `dart:io` code work unchanged. It is refused here: it grants read and
+write over every file on the phone, and a password manager asking for that is a
+far larger claim on the user's trust than the feature is worth. The Storage Access
+Framework grants exactly one folder, chosen by the user.
 
 ---
 

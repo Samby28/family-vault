@@ -22,6 +22,72 @@ tests covering it pass in CI. A screen that renders is not a completed feature.
 
 ---
 
+## 2026-11-10 — Android: three faults in a row, all found by the owner (v0.5.2)
+
+**Status: shared-folder sync withdrawn on Android; backup and import is the
+route there.** The third Android fault in one day, and the third found on a real
+phone rather than by the test suite. The pattern matters more than any one bug,
+so it is recorded first.
+
+### The pattern
+
+| # | Fault | Found by | Why the tests missed it |
+|---|---|---|---|
+| 1 | `getSaveLocation` unimplemented on Android | A CI probe, before any code depended on it | Caught, because the assumption was checked against the resolved package |
+| 2 | Background lock wiped the key mid-pick | The owner, at step 9 of pairing | The fake picker returned in-process; the app never backgrounded |
+| 3 | A picked folder cannot be opened at all on Android | The owner, on the first `Sync now` | The fake folder was a map; the real one is `dart:io`, which Android refuses |
+
+Faults 2 and 3 have the same shape: **the test doubles behave like Windows.**
+A fake that returns in-process cannot reproduce an activity switch, and a folder
+held in a map cannot reproduce scoped storage. Each double was written to make
+the logic testable, succeeded at that, and silently asserted that the platform
+does nothing interesting. Both times the platform was the whole problem.
+
+Fault 1 was caught because the assumption was checked in CI against the actual
+package before a line depended on it. That is the difference, and it is the
+practice to carry forward: **for anything the platform owns, verify against the
+platform, not against a double.**
+
+### Fault 3, in detail
+
+`Sync now` on the phone returned `PathAccessException` for
+`/storage/emulated/0/Family Vault`.
+
+Since Android 11, scoped storage limits an app to its own directory. A path under
+`/storage/emulated/0` cannot be opened with ordinary file access however the
+folder was chosen, and neither `WRITE_EXTERNAL_STORAGE` nor the privileged
+`WRITE_MEDIA_STORAGE` grants an app targeting Android 11 or later any more. So
+`getDirectoryPath` returns a path string that the system then refuses to open.
+
+The design had the right shape and the wrong content: `SyncFolder` was written as
+an interface precisely so another implementation could exist, and then only the
+`dart:io` one was written while the feature was offered on both platforms. The
+abstraction was there; the second implementation was assumed.
+
+### What shipped instead of a fix
+
+`FileTransfer.canUseSharedFolder`, false on Android and on the web. Where it is
+false the screen shows why and points at backup and import, rather than letting
+someone configure a sync that fails the first time they press the button.
+Withdrawing a feature is a worse outcome than fixing it, and a much better one
+than leaving it there broken.
+
+Backup and import is unaffected on Android: the picker hands the app the file's
+**contents**, never a path, so scoped storage does not apply. Same encrypted
+file, same entry-by-entry merge, same result.
+
+### What is still owed
+
+A `SafSyncFolder` over the Storage Access Framework —
+`ACTION_OPEN_DOCUMENT_TREE`, a persisted tree URI, and `DocumentFile` reads and
+writes over a platform channel. That is the supported route and it would make the
+folder sync work on Android. `MANAGE_EXTERNAL_STORAGE` was considered and refused:
+it would make the existing code work unchanged, and it grants read and write over
+every file on the phone, which a password manager should not be asking for.
+Recorded as D-015.
+
+---
+
 ## 2026-11-10 — The background lock wiped the key mid-pick (v0.5.1)
 
 **Status: fixed.** CI run `42816168137`: analyser clean, **386 tests pass**,

@@ -250,16 +250,20 @@ ever sees a file it cannot read.
 **Check this before you start — it decides whether shared folders work for you
 at all:**
 
-| Your two devices | Shared folder | What you need |
+| Your two devices | Shared folder | What to do |
 |---|---|---|
-| Two Windows PCs | Works | The Google Drive, OneDrive or Dropbox folder already on both, or a network share |
-| Windows + Android, with a folder-sync app on the phone | Works | Syncthing, FolderSync or Nextcloud set up on the phone first, outside this app |
-| Windows + Android, nothing extra | **Does not work** | Use the backup-and-import steps above instead, both directions |
+| Two Windows PCs | Works | Use the Google Drive, OneDrive or Dropbox folder already on both, or a network share |
+| Anything involving an Android phone | **Not available** | Use the backup-and-import steps above, both directions |
 
-The reason is Android, not this app. The Google Drive, OneDrive and Dropbox
-Android apps keep their offline files inside themselves and expose no folder
-that another app can list and write to. So on a phone there is nothing for
-Family Vault to point at unless something else puts a real folder there.
+**Why not on Android.** Since Android 11 an app may only read and write its own
+private folder. A folder you pick anywhere else on the phone cannot be opened by
+this app, and no permission changes that — it is how the system is built. The
+shared-folder section simply does not appear on Android; the app says so rather
+than letting you set up something that would fail the first time you pressed the
+button.
+
+Backup and import is not a lesser option. It is the same encrypted file and the
+same entry-by-entry merge. The only difference is that you move the file.
 
 **Set it up in this order.** It matters.
 

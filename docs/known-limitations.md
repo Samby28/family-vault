@@ -66,14 +66,17 @@ Google, Microsoft or Dropbox and talks to none of them. It reads and writes file
 in a folder you choose; whatever already keeps that folder in step does the
 moving, and it only ever sees encrypted files.
 
-**Shared-folder sync does not work on Android with Google Drive, OneDrive or
-Dropbox alone.** Those apps keep their offline files inside themselves and
-expose no folder another app can list and write to, so there is nothing for
-Family Vault to point at. A phone needs an app that mirrors a cloud folder into
-real phone storage — Syncthing, FolderSync, Nextcloud — or you use backup and
-import instead, which always works. This is an Android limitation, not one that
-a different design here would fix: the folder picker the app uses is the
-platform's own, and on Android it cannot be given a Drive folder.
+**Shared-folder sync is not available on Android at all.** Not for want of a
+permission, and not because of which cloud app you use: since Android 11 an app
+may only read and write its own private directory, so a folder the user picks
+under `/storage/emulated/0` cannot be opened with ordinary file access however
+it was chosen. `WRITE_EXTERNAL_STORAGE` and the privileged
+`WRITE_MEDIA_STORAGE` grant an app targeting Android 11 or later nothing extra.
+
+The supported route is the Storage Access Framework, through Android's document
+APIs rather than file paths. **That is not built**, so the shared-folder section
+does not appear on Android, and backup and import is the way to move entries to
+and from a phone. See `docs/decisions-and-risks.md`, D-015.
 
 **Take a backup.** The app cannot recover a vault from a lost device on its own.
 A backup file on a cloud drive or a USB stick is the only thing standing between

@@ -9,10 +9,13 @@ import 'package:flutter/foundation.dart';
 /// test can hand the import exactly the bytes a real export produced, which
 /// is the only way to prove the two halves fit together.
 final class FakeFileTransfer implements FileTransfer {
-  FakeFileTransfer({this.hasSaveDialog = true});
+  FakeFileTransfer({this.hasSaveDialog = true, this.canUseSharedFolder = true});
 
   @override
   final bool hasSaveDialog;
+
+  @override
+  final bool canUseSharedFolder;
 
   /// What [pick] returns next. Null means the user cancels.
   PickedFile? nextPick;
